@@ -21,7 +21,8 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 40.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -65,14 +66,17 @@ class _LoginPageState extends State<LoginPage> {
                               fontSize: 18,
                               color: CustomColors.greycolor,
                             ),
-                            prefixIcon: Icon(Icons.email,size: 20, color: CustomColors.greycolor),
+                            prefixIcon: Icon(Icons.email,
+                                size: 20, color: CustomColors.greycolor),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(color: CustomColors.appblue),
+                              borderSide:
+                                  BorderSide(color: CustomColors.appblue),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(color: CustomColors.appblue, width: 2.0),
+                              borderSide: BorderSide(
+                                  color: CustomColors.appblue, width: 2.0),
                             ),
                           ),
                           keyboardType: TextInputType.emailAddress,
@@ -87,7 +91,8 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         Text(
                           'Password',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(height: 5),
                         TextField(
@@ -101,10 +106,13 @@ class _LoginPageState extends State<LoginPage> {
                               fontSize: 18,
                               color: CustomColors.greycolor,
                             ),
-                            prefixIcon: Icon(Icons.lock, size: 20, color: CustomColors.greycolor),
+                            prefixIcon: Icon(Icons.lock,
+                                size: 20, color: CustomColors.greycolor),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                                 color: CustomColors.greycolor,
                               ),
                               onPressed: () {
@@ -115,11 +123,13 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(color: CustomColors.appblue),
+                              borderSide:
+                                  BorderSide(color: CustomColors.appblue),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(color: CustomColors.appblue, width: 2.0),
+                              borderSide: BorderSide(
+                                  color: CustomColors.appblue, width: 2.0),
                             ),
                           ),
                           obscureText: _obscurePassword,
@@ -133,9 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         GestureDetector(
-                          onTap: () {
-                            
-                          },
+                          onTap: () {},
                           child: Text(
                             'Forgot Password?',
                             style: TextStyle(
@@ -153,10 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          String email = _emailController.text;
-                          String password = _passwordController.text;
-                        },
+                        onPressed: () {},
                         style: ElevatedButton.styleFrom(
                           backgroundColor: CustomColors.appblue,
                           padding: EdgeInsets.symmetric(vertical: 16),
@@ -198,15 +203,13 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
-                    
+
                     SizedBox(height: 20),
                     // Continue with Google Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          
-                        },
+                        onPressed: () {},
                         icon: Image.asset(
                           'assets/google_icon.png',
                           height: 36,
@@ -216,11 +219,15 @@ class _LoginPageState extends State<LoginPage> {
                           style: TextStyle(fontSize: 17, color: Colors.black),
                         ),
                         style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                          overlayColor: MaterialStateProperty.all(const Color.fromARGB(255, 230, 229, 229)),
+                          backgroundColor:
+                              MaterialStateProperty.all(Colors.transparent),
+                          overlayColor: MaterialStateProperty.all(
+                              const Color.fromARGB(255, 230, 229, 229)),
                           elevation: MaterialStateProperty.all(0),
-                          side: MaterialStateProperty.all(BorderSide(color: CustomColors.greycolor)),
-                          padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 8)),
+                          side: MaterialStateProperty.all(
+                              BorderSide(color: CustomColors.greycolor)),
+                          padding: MaterialStateProperty.all(
+                              EdgeInsets.symmetric(vertical: 8)),
                           shape: MaterialStateProperty.all(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10.0),
@@ -248,9 +255,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      
-                    },
+                    onTap: () {},
                     child: Text(
                       'Sign Up',
                       style: TextStyle(
