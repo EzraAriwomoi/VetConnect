@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vetconnect/components/Header/page_header.dart';
-import 'package:vetconnect/components/coloors/colors.dart';
+import 'package:vetconnect/components/extension/custom_theme.dart';
 
 class VeterinarianRegisterPage extends StatefulWidget {
   const VeterinarianRegisterPage({super.key});
@@ -39,30 +39,30 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
 
               // Name Input
               _buildTextField(_nameController, 'Full Name'),
-              SizedBox(height: 15),
+              SizedBox(height: 10),
 
               // Email Input
               _buildTextField(_emailController, 'Email',
                   TextInputType.emailAddress),
-              SizedBox(height: 15),
+              SizedBox(height: 10),
 
               // National ID
               _buildTextField(_nationalID, 'National ID', TextInputType.number),
-              SizedBox(height: 15),
+              SizedBox(height: 10),
 
               // Clinic Input
               _buildTextField(_clinic, 'Clinic'),
-              SizedBox(height: 15),
+              SizedBox(height: 10),
 
               // License Number Input
               _buildTextField(_licenseController, 'License Number (e.g., KVB)'),
-              SizedBox(height: 15),
+              SizedBox(height: 10),
 
               // Specialization Dropdown
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10.0),
-                  border: Border.all(color: CustomColors.appblue),
+                  border: Border.all(color: context.theme.primecolor,),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
@@ -74,7 +74,7 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
                         style: TextStyle(
                             fontSize: 17,
                             color: _specialization == null
-                                ? CustomColors.greycolor
+                                ? context.theme.subtitletext
                                 : Colors.black),
                       ),
                     ),
@@ -106,12 +106,12 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
                     icon: Padding(
                       padding: const EdgeInsets.only(right: 16.0),
                       child: Icon(Icons.arrow_drop_down,
-                          color: CustomColors.greycolor),
+                          color: context.theme.subtitletext,),
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
 
               // Password Input
               _buildPasswordField(
@@ -124,7 +124,7 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
                   });
                 },
               ),
-              SizedBox(height: 15),
+              SizedBox(height: 10),
 
               // Confirm Password Input
               _buildPasswordField(
@@ -145,7 +145,7 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
                 child: ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: CustomColors.appblue,
+                    backgroundColor: context.theme.primecolor,
                     padding: EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
@@ -155,7 +155,7 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
                       style: TextStyle(fontSize: 17, color: Colors.white)),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
             ],
           ),
         ),
@@ -169,19 +169,19 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
     return TextField(
       controller: controller,
       style: TextStyle(fontSize: 18),
-      cursorColor: CustomColors.appblue,
+      cursorColor: context.theme.primecolor,
       cursorHeight: 18,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: label,
-        hintStyle: TextStyle(color: CustomColors.greycolor),
+        hintStyle: TextStyle(color: context.theme.subtitletext,),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: CustomColors.appblue),
+          borderSide: BorderSide(color: context.theme.primecolor,),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: CustomColors.appblue, width: 2.0),
+          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
         ),
       ),
     );
@@ -196,24 +196,24 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
     return TextField(
       controller: controller,
       style: TextStyle(fontSize: 18),
-      cursorColor: CustomColors.appblue,
+      cursorColor: context.theme.primecolor,
       cursorHeight: 18,
       obscureText: obscureText,
       decoration: InputDecoration(
         hintText: label,
-        hintStyle: TextStyle(color: CustomColors.greycolor),
+        hintStyle: TextStyle(color: context.theme.subtitletext,),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: CustomColors.appblue),
+          borderSide: BorderSide(color: context.theme.primecolor,),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: CustomColors.appblue, width: 2.0),
+          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
         ),
         suffixIcon: IconButton(
           icon: Icon(
             obscureText ? Icons.visibility_off : Icons.visibility,
-            color: CustomColors.greycolor,
+            color: context.theme.subtitletext,
             size: 20,
           ),
           onPressed: () {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vetconnect/components/Header/page_header.dart';
-import 'package:vetconnect/components/coloors/colors.dart';
+import 'package:vetconnect/components/extension/custom_theme.dart';
 
 import 'signup/animal_owner_register.dart';
 import 'signup/veterinarian_register.dart';
@@ -15,6 +15,30 @@ class UserSelectionPage extends StatefulWidget {
 class _UserSelectionPageState extends State<UserSelectionPage> {
   String _selectedUserType = '';
 
+  void _proceed() {
+    if (_selectedUserType == 'veterinarian') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const VeterinarianRegisterPage(),
+        ),
+      );
+    } else if (_selectedUserType == 'Owner') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AnimalOwnerRegisterPage(),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select an account type to proceed.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,18 +50,28 @@ class _UserSelectionPageState extends State<UserSelectionPage> {
               subtitle: 'Select the type of account to create...',
             ),
 
+            SizedBox(height: 10),
+            Text(
+              'Follow each STEP to get started with your account.',
+              style: TextStyle(
+                color: context.theme.subtitletext,
+              ),
+            ),
+
             Spacer(),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
                 children: [
-
                   // Veterinarian Option
                   Container(
                     height: 80,
                     decoration: BoxDecoration(
-                      border: Border.all(color: CustomColors.appblue),
+                      color: _selectedUserType == 'veterinarian'
+                          ? context.theme.primecolor.withOpacity(0.1)
+                          : Colors.transparent,
+                      border: Border.all(color: context.theme.primecolor),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: InkWell(
@@ -46,7 +80,7 @@ class _UserSelectionPageState extends State<UserSelectionPage> {
                           _selectedUserType = 'veterinarian';
                         });
                       },
-                      splashColor: CustomColors.appblue.withOpacity(0.3),
+                      splashColor: context.theme.primecolor.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(10),
                       child: Center(
                         child: ListTile(
@@ -55,7 +89,20 @@ class _UserSelectionPageState extends State<UserSelectionPage> {
                             padding: const EdgeInsets.only(left: 10.0),
                             child: Text(
                               "Veterinarian",
-                              style: TextStyle(fontSize: 18),
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: context.theme.titletext,
+                              ),
+                            ),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              'For veterinary professionals',
+                              style: TextStyle(
+                                color: context.theme.subtitletext,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                           leading: Transform.scale(
@@ -68,21 +115,24 @@ class _UserSelectionPageState extends State<UserSelectionPage> {
                                   _selectedUserType = value.toString();
                                 });
                               },
-                              activeColor: CustomColors.appblue,
+                              activeColor: context.theme.primecolor,
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  
+
                   SizedBox(height: 20),
 
                   // Animal Owner Option
                   Container(
                     height: 80,
                     decoration: BoxDecoration(
-                      border: Border.all(color: CustomColors.appblue),
+                      color: _selectedUserType == 'Owner'
+                          ? context.theme.primecolor.withOpacity(0.1)
+                          : Colors.transparent,
+                      border: Border.all(color: context.theme.primecolor),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: InkWell(
@@ -91,7 +141,7 @@ class _UserSelectionPageState extends State<UserSelectionPage> {
                           _selectedUserType = 'Owner';
                         });
                       },
-                      splashColor: CustomColors.appblue.withOpacity(0.3),
+                      splashColor: context.theme.primecolor.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(10),
                       child: Center(
                         child: ListTile(
@@ -100,7 +150,20 @@ class _UserSelectionPageState extends State<UserSelectionPage> {
                             padding: const EdgeInsets.only(left: 10.0),
                             child: Text(
                               "Animal Owner",
-                              style: TextStyle(fontSize: 18),
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: context.theme.titletext,
+                              ),
+                            ),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              'For pet and livestock owners',
+                              style: TextStyle(
+                                color: context.theme.subtitletext,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                           leading: Transform.scale(
@@ -113,7 +176,7 @@ class _UserSelectionPageState extends State<UserSelectionPage> {
                                   _selectedUserType = value.toString();
                                 });
                               },
-                              activeColor: CustomColors.appblue,
+                              activeColor: context.theme.primecolor,
                             ),
                           ),
                         ),
@@ -132,26 +195,10 @@ class _UserSelectionPageState extends State<UserSelectionPage> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_selectedUserType == 'veterinarian') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VeterinarianRegisterPage(),
-                        ),
-                      );
-                    } else if (_selectedUserType == 'Owner') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AnimalOwnerRegisterPage(),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: _proceed,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: CustomColors.appblue,
-                    padding: EdgeInsets.symmetric(vertical: 15),
+                    backgroundColor: context.theme.primecolor,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

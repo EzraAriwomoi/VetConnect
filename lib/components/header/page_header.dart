@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vetconnect/components/coloors/colors.dart';
+import 'package:vetconnect/components/extension/custom_theme.dart';
 
 class PageHeader extends StatelessWidget {
   final String title;
@@ -20,12 +20,18 @@ class PageHeader extends StatelessWidget {
         ),
         Text(
           title,
-          style: TextStyle(fontSize: 28),
+          style: TextStyle(
+            fontSize: 28,
+            color: context.theme.titletext,
+          ),
         ),
         SizedBox(height: 10),
         Text(
           subtitle,
-          style: TextStyle(fontSize: 17, color: CustomColors.greycolor),
+          style: TextStyle(
+            fontSize: 17,
+            color: context.theme.subtitletext,
+          ),
         ),
       ],
     );

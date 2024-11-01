@@ -1,22 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:vetconnect/components/coloors/colors.dart';
+import 'package:vetconnect/components/extension/custom_theme.dart';
 import 'package:vetconnect/pages/registration/selection_page.dart';
 
 class UserGuide3 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CustomColors.appblue,
+      appBar: AppBar(
+        backgroundColor: context.theme.primecolor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      backgroundColor: context.theme.primecolor,
       body: Stack(
         children: [
           Align(
             alignment: Alignment.topCenter,
             child: Padding(
-              padding: const EdgeInsets.only(top: 160.0),
+              padding: const EdgeInsets.only(top: 62.0),
               child: Container(
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: CustomColors.dimblue,
+                  color: context.theme.deepprimecolor,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(20.0),
                     topRight: Radius.circular(20.0),
@@ -43,7 +54,7 @@ class UserGuide3 extends StatelessWidget {
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.45,
                 width: double.infinity,
-                color: Colors.white,
+                color: context.theme.curvedpartcolor,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 20.0, vertical: 20.0),
@@ -55,7 +66,7 @@ class UserGuide3 extends StatelessWidget {
                         'Find the nearest veterinarians for your pet',
                         style: TextStyle(
                           fontSize: 32,
-                          color: Colors.black,
+                          color: context.theme.titletext,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -65,7 +76,7 @@ class UserGuide3 extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 17,
-                          color: Colors.grey[700],
+                          color: context.theme.subtitletext,
                         ),
                       ),
                       SizedBox(height: 50),
@@ -81,7 +92,7 @@ class UserGuide3 extends StatelessWidget {
                               backgroundColor: CustomColors.greycolor),
                           SizedBox(width: 6),
                           CircleAvatar(
-                              radius: 4, backgroundColor: CustomColors.appblue),
+                              radius: 4, backgroundColor: context.theme.primecolor),
                         ],
                       ),
 
@@ -98,7 +109,7 @@ class UserGuide3 extends StatelessWidget {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: CustomColors.appblue,
+                            backgroundColor: context.theme.primecolor,
                             padding: EdgeInsets.symmetric(
                                 vertical: 12),
                             shape: RoundedRectangleBorder(
