@@ -26,5 +26,5 @@ Follow these instructions to set up the project on your local machine for develo
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/EzraAriwomoi/vetconnect.git
-   cd vetconnect
+   git clone https://github.com/EzraAriwomoi/VetConnect.git
+   cd VetConnect

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:vetconnect/components/coloors/colors.dart';
 
 class AnimalOwnerRegisterPage extends StatefulWidget {
+  const AnimalOwnerRegisterPage({super.key});
+
   @override
   _AnimalOwnerRegisterPageState createState() => _AnimalOwnerRegisterPageState();
 }
@@ -11,6 +14,8 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _animalTypeController = TextEditingController();
   
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -33,40 +38,45 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
                 SizedBox(height: 20),
                 Text(
                   'Animal Owner Registration',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 28),
                 ),
                 SizedBox(height: 20),
 
                 // Name Input
                 _buildTextField(
                   controller: _nameController,
-                  label: 'Name',
-                  hint: 'Enter your name',
-                  icon: Icons.person,
+                  hint: 'Full Name',
                 ),
 
                 // Email Input
                 _buildTextField(
                   controller: _emailController,
-                  label: 'Email',
-                  hint: 'Enter your email',
-                  icon: Icons.email,
+                  hint: 'Email',
                   keyboardType: TextInputType.emailAddress,
                 ),
 
                 // Phone Number Input
                 _buildTextField(
                   controller: _phoneController,
-                  label: 'Phone Number',
-                  hint: 'Enter your phone number',
-                  icon: Icons.phone,
+                  hint: 'Phone Number (e.g. 254...)',
                   keyboardType: TextInputType.phone,
+                ),
+
+                // Location Input
+                _buildTextField(
+                  controller: _locationController,
+                  hint: 'Location (County, Town)',
+                ),
+
+                // Animal type Input
+                _buildTextField(
+                  controller: _animalTypeController,
+                  hint: 'Animal Type (e.g., Cattle, Dog)',
                 ),
 
                 // Password Input
                 _buildPasswordField(
                   controller: _passwordController,
-                  label: 'Password',
                   hint: 'Enter your password',
                   obscureText: _obscurePassword,
                   onToggle: () {
@@ -79,7 +89,6 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
                 // Confirm Password Input
                 _buildPasswordField(
                   controller: _confirmPasswordController,
-                  label: 'Confirm Password',
                   hint: 'Confirm your password',
                   obscureText: _obscureConfirmPassword,
                   onToggle: () {
@@ -96,10 +105,10 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Implement registration logic
+                      
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: CustomColors.appblue,
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.0),
@@ -122,32 +131,28 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
 
   Widget _buildTextField({
     required TextEditingController controller,
-    required String label,
     required String hint,
-    required IconData icon,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 17)),
-        SizedBox(height: 5),
         TextField(
           controller: controller,
           style: TextStyle(fontSize: 18),
-          cursorColor: Colors.blue,
+          cursorColor: CustomColors.appblue,
+          cursorHeight: 18,
           keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(fontSize: 18, color: Colors.grey),
-            prefixIcon: Icon(icon, color: Colors.grey),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
-              borderSide: BorderSide(color: Colors.blue),
+              borderSide: BorderSide(color: CustomColors.appblue,),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
-              borderSide: BorderSide(color: Colors.blue, width: 2.0),
+              borderSide: BorderSide(color: CustomColors.appblue, width: 2.0),
             ),
           ),
         ),
@@ -158,7 +163,6 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
 
   Widget _buildPasswordField({
     required TextEditingController controller,
-    required String label,
     required String hint,
     required bool obscureText,
     required VoidCallback onToggle,
@@ -166,31 +170,30 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 17)),
-        SizedBox(height: 5),
         TextField(
           controller: controller,
           style: TextStyle(fontSize: 18),
-          cursorColor: Colors.blue,
+          cursorColor: CustomColors.appblue,
+          cursorHeight: 18,
           obscureText: obscureText,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(fontSize: 18, color: Colors.grey),
-            prefixIcon: Icon(Icons.lock, color: Colors.grey),
             suffixIcon: IconButton(
               icon: Icon(
                 obscureText ? Icons.visibility_off : Icons.visibility,
                 color: Colors.grey,
+                size: 20,
               ),
               onPressed: onToggle,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
-              borderSide: BorderSide(color: Colors.blue),
+              borderSide: BorderSide(color: CustomColors.appblue,),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
-              borderSide: BorderSide(color: Colors.blue, width: 2.0),
+              borderSide: BorderSide(color: CustomColors.appblue, width: 2.0),
             ),
           ),
         ),

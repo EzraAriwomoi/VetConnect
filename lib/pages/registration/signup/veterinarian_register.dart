@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:vetconnect/components/colors.dart';
+import 'package:vetconnect/components/Header/page_header.dart';
+import 'package:vetconnect/components/coloors/colors.dart';
 
 class VeterinarianRegisterPage extends StatefulWidget {
+  const VeterinarianRegisterPage({super.key});
+
   @override
   _VeterinarianRegisterPageState createState() =>
       _VeterinarianRegisterPageState();
@@ -14,6 +17,8 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final TextEditingController _licenseController = TextEditingController();
+  final TextEditingController _nationalID = TextEditingController();
+  final TextEditingController _clinic = TextEditingController();
 
   String? _specialization;
   bool _obscurePassword = true;
@@ -24,31 +29,33 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
-                child: Image.asset(
-                  'assets/logo.png',
-                  height: 150,
-                ),
+              PageHeader(
+                title: 'Veterinarian Registration',
+                subtitle: '',
               ),
-              Text('Veterinarian Registration', style: TextStyle(fontSize: 26)),
-              SizedBox(height: 20),
 
               // Name Input
-              _buildTextField(_nameController, 'Full Name', Icons.person),
+              _buildTextField(_nameController, 'Full Name'),
               SizedBox(height: 15),
 
               // Email Input
-              _buildTextField(_emailController, 'Email', Icons.email,
+              _buildTextField(_emailController, 'Email',
                   TextInputType.emailAddress),
               SizedBox(height: 15),
 
+              // National ID
+              _buildTextField(_nationalID, 'National ID', TextInputType.number),
+              SizedBox(height: 15),
+
+              // Clinic Input
+              _buildTextField(_clinic, 'Clinic'),
+              SizedBox(height: 15),
+
               // License Number Input
-              _buildTextField(
-                  _licenseController, 'License Number', Icons.card_membership),
+              _buildTextField(_licenseController, 'License Number (e.g., KVB)'),
               SizedBox(height: 15),
 
               // Specialization Dropdown
@@ -62,8 +69,10 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
                     hint: Container(
                       padding: const EdgeInsets.only(left: 14.0),
                       child: Text(
-                        _specialization ?? 'Select specialization',
+                        _specialization ??
+                            'Specialization (e.g., Small Animals)',
                         style: TextStyle(
+                            fontSize: 17,
                             color: _specialization == null
                                 ? CustomColors.greycolor
                                 : Colors.black),
@@ -134,9 +143,7 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Implement registration logic
-                  },
+                  onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: CustomColors.appblue,
                     padding: EdgeInsets.symmetric(vertical: 16),
@@ -157,16 +164,17 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
   }
 
   Widget _buildTextField(
-      TextEditingController controller, String label, IconData icon,
+      TextEditingController controller, String label,
       [TextInputType? keyboardType]) {
     return TextField(
       controller: controller,
       style: TextStyle(fontSize: 18),
       cursorColor: CustomColors.appblue,
+      cursorHeight: 18,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: label,
-        prefixIcon: Icon(icon, color: CustomColors.greycolor),
+        hintStyle: TextStyle(color: CustomColors.greycolor),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
           borderSide: BorderSide(color: CustomColors.appblue),
@@ -189,10 +197,11 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
       controller: controller,
       style: TextStyle(fontSize: 18),
       cursorColor: CustomColors.appblue,
+      cursorHeight: 18,
       obscureText: obscureText,
       decoration: InputDecoration(
         hintText: label,
-        prefixIcon: Icon(Icons.lock, color: CustomColors.greycolor),
+        hintStyle: TextStyle(color: CustomColors.greycolor),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
           borderSide: BorderSide(color: CustomColors.appblue),
@@ -205,6 +214,7 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
           icon: Icon(
             obscureText ? Icons.visibility_off : Icons.visibility,
             color: CustomColors.greycolor,
+            size: 20,
           ),
           onPressed: () {
             onToggleVisibility(!obscureText);

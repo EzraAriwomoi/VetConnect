@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:vetconnect/components/colors.dart';
+import 'package:vetconnect/components/coloors/colors.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -23,7 +25,6 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20.0),
                       child: Image.asset(
@@ -32,7 +33,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 10),
-                    // Title
                     Text(
                       'Welcome Back!!',
                       style: TextStyle(
@@ -40,6 +40,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 20),
+
                     // Email Input
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,7 +65,7 @@ class _LoginPageState extends State<LoginPage> {
                               fontSize: 18,
                               color: CustomColors.greycolor,
                             ),
-                            prefixIcon: Icon(Icons.email, color: CustomColors.greycolor),
+                            prefixIcon: Icon(Icons.email,size: 20, color: CustomColors.greycolor),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                               borderSide: BorderSide(color: CustomColors.appblue),
@@ -79,6 +80,7 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                     SizedBox(height: 15),
+
                     // Password Input
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                               fontSize: 18,
                               color: CustomColors.greycolor,
                             ),
-                            prefixIcon: Icon(Icons.lock, color: CustomColors.greycolor),
+                            prefixIcon: Icon(Icons.lock, size: 20, color: CustomColors.greycolor),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -125,13 +127,14 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    // Forgot Password Link
+
+                    // Forgot Password
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         GestureDetector(
                           onTap: () {
-                            // Navigate to the password recovery page
+                            
                           },
                           child: Text(
                             'Forgot Password?',
@@ -145,15 +148,14 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                     SizedBox(height: 20),
+
                     // Login Button
                     SizedBox(
-                      width: double.infinity, // Match width of input fields
+                      width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Implement login functionality
                           String email = _emailController.text;
                           String password = _passwordController.text;
-                          // Add your login logic here
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: CustomColors.appblue,
@@ -196,13 +198,14 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
+                    
                     SizedBox(height: 20),
                     // Continue with Google Button
                     SizedBox(
-                      width: double.infinity, // Match width of input fields
+                      width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          // Implement Google sign-in functionality
+                          
                         },
                         icon: Image.asset(
                           'assets/google_icon.png',
@@ -231,7 +234,8 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-            // Sign Up Link at the Bottom
+
+            // Sign Up
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20.0),
               child: Row(
@@ -245,7 +249,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      // Navigate to the sign-up page
+                      
                     },
                     child: Text(
                       'Sign Up',

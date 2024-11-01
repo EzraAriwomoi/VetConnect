@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/login_page.dart';
-import 'pages/registration/selection_page.dart';
+import 'package:vetconnect/pages/guides/user_guide1.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +14,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'VetConnect',
       theme: ThemeData(),
-      home: UserSelectionPage(),
+      home: const UserGuide1(),
     );
   }
 }
