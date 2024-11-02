@@ -1,24 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:vetconnect/components/extension/custom_theme.dart';
-import 'package:vetconnect/components/header/page_header.dart';
 
-class AnimalOwnerRegisterPage extends StatefulWidget {
-  const AnimalOwnerRegisterPage({super.key});
+class PasswordFileOwnerPage extends StatefulWidget {
+  const PasswordFileOwnerPage({super.key});
 
   @override
-  _AnimalOwnerRegisterPageState createState() =>
-      _AnimalOwnerRegisterPageState();
+  _PasswordFileOwnerPageState createState() => _PasswordFileOwnerPageState();
 }
 
-class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+class _PasswordFileOwnerPageState extends State<PasswordFileOwnerPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _animalTypeController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -26,52 +19,57 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: context.theme.curvedpartcolor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.more_vert, color: Colors.white),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
           child: Column(
             children: [
-              PageHeader(
-                title: 'Animal Owner Registration',
-                subtitle: '',
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                child: Icon(
+                  Icons.lock,
+                  size: 80,
+                  color: context.theme.primecolor,
+                ),
+              ),
+              Text(
+                'You are almost there!!',
+                style: TextStyle(
+                  fontSize: 28,
+                  color: context.theme.titletext,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Finish creating your account. Use a strong password.',
+                style: TextStyle(
+                  fontSize: 17,
+                  color: context.theme.subtitletext,
+                ),
               ),
 
-              // Name Input
-              _buildTextField(
-                controller: _nameController,
-                hint: 'Full Name',
-              ),
-
-              // Email Input
-              _buildTextField(
-                controller: _emailController,
-                hint: 'Email',
-                keyboardType: TextInputType.emailAddress,
-              ),
-
-              // Phone Number Input
-              _buildTextField(
-                controller: _phoneController,
-                hint: 'Phone Number (e.g. 254...)',
-                keyboardType: TextInputType.phone,
-              ),
-
-              // Location Input
-              _buildTextField(
-                controller: _locationController,
-                hint: 'Location (County, Town)',
-              ),
-
-              // Animal type Input
-              _buildTextField(
-                controller: _animalTypeController,
-                hint: 'Animal Type (e.g., Cattle, Dog)',
-              ),
+              SizedBox(height: 40),
 
               // Password Input
               _buildPasswordField(
                 controller: _passwordController,
-                hint: 'Enter your password',
+                label: 'Password',
                 obscureText: _obscurePassword,
                 onToggle: () {
                   setState(() {
@@ -80,10 +78,12 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
                 },
               ),
 
+              SizedBox(height: 20),
+
               // Confirm Password Input
               _buildPasswordField(
                 controller: _confirmPasswordController,
-                hint: 'Confirm your password',
+                label: 'Confirm password',
                 obscureText: _obscureConfirmPassword,
                 onToggle: () {
                   setState(() {
@@ -92,7 +92,7 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
                 },
               ),
 
-              SizedBox(height: 20),
+              SizedBox(height: 30),
 
               // Register Button
               SizedBox(
@@ -120,45 +120,9 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: controller,
-          style: TextStyle(fontSize: 18),
-          cursorColor: context.theme.primecolor,
-          cursorHeight: 18,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle:
-                TextStyle(fontSize: 18, color: context.theme.subtitletext),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.0),
-              borderSide: BorderSide(
-                color: context.theme.primecolor,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.0),
-              borderSide:
-                  BorderSide(color: context.theme.primecolor, width: 2.0),
-            ),
-          ),
-        ),
-        SizedBox(height: 15),
-      ],
-    );
-  }
-
   Widget _buildPasswordField({
     required TextEditingController controller,
-    required String hint,
+    required String label,
     required bool obscureText,
     required VoidCallback onToggle,
   }) {
@@ -172,19 +136,20 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
           cursorHeight: 18,
           obscureText: obscureText,
           decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              fontSize: 18,
+            labelText: label,
+            labelStyle: TextStyle(
+              fontSize: 17,
               color: context.theme.subtitletext,
             ),
             suffixIcon: IconButton(
               icon: Icon(
                 obscureText ? Icons.visibility_off : Icons.visibility,
                 color: context.theme.subtitletext,
-                size: 20,
+                size: 24,
               ),
               onPressed: onToggle,
             ),
+            floatingLabelBehavior: FloatingLabelBehavior.auto,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
               borderSide: BorderSide(
@@ -198,7 +163,6 @@ class _AnimalOwnerRegisterPageState extends State<AnimalOwnerRegisterPage> {
             ),
           ),
         ),
-        SizedBox(height: 15),
       ],
     );
   }

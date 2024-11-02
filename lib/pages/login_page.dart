@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vetconnect/components/coloors/colors.dart';
+import 'package:vetconnect/components/extension/custom_theme.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,9 +9,17 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool _obscurePassword = true;
+  final TextEditingController _emailController1 = TextEditingController();
+  final TextEditingController _passwordController1 = TextEditingController();
+
+  bool _obscurePassword1 = true;
+
+  @override
+  void dispose() {
+    _emailController1.dispose();
+    _passwordController1.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,104 +46,27 @@ class _LoginPageState extends State<LoginPage> {
                       'Welcome Back!!',
                       style: TextStyle(
                         fontSize: 26,
+                        color: context.theme.titletext,
                       ),
                     ),
                     SizedBox(height: 20),
 
                     // Email Input
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Email',
-                          style: TextStyle(
-                            fontSize: 17,
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                        TextField(
-                          style: TextStyle(
-                            fontSize: 18,
-                          ),
-                          cursorColor: CustomColors.appblue,
-                          cursorHeight: 20,
-                          controller: _emailController,
-                          decoration: InputDecoration(
-                            hintText: 'Enter your email',
-                            hintStyle: TextStyle(
-                              fontSize: 18,
-                              color: CustomColors.greycolor,
-                            ),
-                            prefixIcon: Icon(Icons.email,
-                                size: 20, color: CustomColors.greycolor),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide:
-                                  BorderSide(color: CustomColors.appblue),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
-                                  color: CustomColors.appblue, width: 2.0),
-                            ),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                      ],
-                    ),
+                    _buildEmailField(_emailController1, 'Email'),
                     SizedBox(height: 15),
 
                     // Password Input
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Password',
-                          style: TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 5),
-                        TextField(
-                          style: TextStyle(fontSize: 18),
-                          cursorColor: CustomColors.appblue,
-                          cursorHeight: 20,
-                          controller: _passwordController,
-                          decoration: InputDecoration(
-                            hintText: 'Enter your password',
-                            hintStyle: TextStyle(
-                              fontSize: 18,
-                              color: CustomColors.greycolor,
-                            ),
-                            prefixIcon: Icon(Icons.lock,
-                                size: 20, color: CustomColors.greycolor),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: CustomColors.greycolor,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide:
-                                  BorderSide(color: CustomColors.appblue),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
-                                  color: CustomColors.appblue, width: 2.0),
-                            ),
-                          ),
-                          obscureText: _obscurePassword,
-                        ),
-                      ],
+                    _buildPasswordField(
+                      _passwordController1,
+                      'Password',
+                      _obscurePassword1,
+                      (value) {
+                        setState(() {
+                          _obscurePassword1 = value;
+                        });
+                      },
                     ),
+
                     SizedBox(height: 10),
 
                     // Forgot Password
@@ -147,8 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: Text(
                             'Forgot Password?',
                             style: TextStyle(
-                              color: CustomColors.appblue,
-                              fontWeight: FontWeight.bold,
+                              color: context.theme.primecolor,
                               fontSize: 17,
                             ),
                           ),
@@ -163,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: CustomColors.appblue,
+                          backgroundColor: context.theme.primecolor,
                           padding: EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0),
@@ -176,13 +106,14 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 60),
+
                     // OR Continue with Section
                     Row(
                       children: [
                         Expanded(
                           child: Divider(
                             thickness: 1,
-                            color: Colors.grey[400],
+                            color: context.theme.subtitletext,
                           ),
                         ),
                         Padding(
@@ -190,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: Text(
                             "Or continue with",
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: context.theme.subtitletext,
                               fontSize: 15,
                             ),
                           ),
@@ -198,13 +129,14 @@ class _LoginPageState extends State<LoginPage> {
                         Expanded(
                           child: Divider(
                             thickness: 1,
-                            color: Colors.grey[400],
+                            color: context.theme.subtitletext,
                           ),
                         ),
                       ],
                     ),
 
                     SizedBox(height: 20),
+
                     // Continue with Google Button
                     SizedBox(
                       width: double.infinity,
@@ -216,16 +148,16 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         label: Text(
                           'Sign in with Google',
-                          style: TextStyle(fontSize: 17, color: Colors.black),
+                          style: TextStyle(fontSize: 17, color: context.theme.titletext,),
                         ),
                         style: ButtonStyle(
                           backgroundColor:
                               MaterialStateProperty.all(Colors.transparent),
                           overlayColor: MaterialStateProperty.all(
-                              const Color.fromARGB(255, 230, 229, 229)),
+                              Color.fromARGB(255, 10, 54, 61)),
                           elevation: MaterialStateProperty.all(0),
                           side: MaterialStateProperty.all(
-                              BorderSide(color: CustomColors.greycolor)),
+                              BorderSide(color: context.theme.subtitletext,)),
                           padding: MaterialStateProperty.all(
                               EdgeInsets.symmetric(vertical: 8)),
                           shape: MaterialStateProperty.all(
@@ -252,6 +184,7 @@ class _LoginPageState extends State<LoginPage> {
                     "Don't have an account? ",
                     style: TextStyle(
                       fontSize: 17,
+                      color: context.theme.titletext,
                     ),
                   ),
                   GestureDetector(
@@ -259,7 +192,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Text(
                       'Sign Up',
                       style: TextStyle(
-                        color: CustomColors.appblue,
+                        color: context.theme.primecolor,
                         fontSize: 17,
                       ),
                     ),
@@ -268,6 +201,71 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmailField(TextEditingController controller, String label) {
+    return TextField(
+      controller: controller,
+      style: TextStyle(fontSize: 18),
+      cursorColor: context.theme.primecolor,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: context.theme.subtitletext,
+          fontSize: 18,
+        ),
+        prefixIcon: Icon(Icons.email, color: context.theme.primecolor,),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(color: context.theme.primecolor,),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
+        ),
+      ),
+      keyboardType: TextInputType.emailAddress,
+    );
+  }
+
+  Widget _buildPasswordField(
+    TextEditingController controller,
+    String label,
+    bool obscureText,
+    Function(bool) onToggleVisibility,
+  ) {
+    return TextField(
+      controller: controller,
+      style: TextStyle(fontSize: 18),
+      cursorColor: context.theme.primecolor,
+      cursorHeight: 20,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: context.theme.subtitletext,
+          fontSize: 18,
+        ),
+        prefixIcon: Icon(Icons.lock, color: context.theme.primecolor,),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(color: context.theme.primecolor,),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            obscureText ? Icons.visibility_off : Icons.visibility,
+            color: context.theme.subtitletext,
+          ),
+          onPressed: () {
+            onToggleVisibility(!obscureText);
+          },
         ),
       ),
     );

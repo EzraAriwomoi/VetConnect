@@ -11,7 +11,7 @@ extension ExtendedTheme on BuildContext {
 class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
   final Color? curvedpartcolor;
   final Color? titletext;
-  final Color? subtitletext;
+  final subtitletext;
   final primecolor;
   final Color? deepprimecolor;
 

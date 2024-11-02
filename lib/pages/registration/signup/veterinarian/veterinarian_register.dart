@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:vetconnect/components/Header/page_header.dart';
 import 'package:vetconnect/components/extension/custom_theme.dart';
 
+import './create_password.dart';
+
 class VeterinarianRegisterPage extends StatefulWidget {
   const VeterinarianRegisterPage({super.key});
 
@@ -13,20 +15,31 @@ class VeterinarianRegisterPage extends StatefulWidget {
 class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
   final TextEditingController _licenseController = TextEditingController();
   final TextEditingController _nationalID = TextEditingController();
   final TextEditingController _clinic = TextEditingController();
 
   String? _specialization;
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: context.theme.curvedpartcolor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.more_vert, color: Colors.white),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
@@ -42,8 +55,8 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
               SizedBox(height: 10),
 
               // Email Input
-              _buildTextField(_emailController, 'Email',
-                  TextInputType.emailAddress),
+              _buildTextField(
+                  _emailController, 'Email', TextInputType.emailAddress),
               SizedBox(height: 10),
 
               // National ID
@@ -62,7 +75,9 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10.0),
-                  border: Border.all(color: context.theme.primecolor,),
+                  border: Border.all(
+                    color: context.theme.primecolor,
+                  ),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
@@ -105,45 +120,27 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
                     isExpanded: true,
                     icon: Padding(
                       padding: const EdgeInsets.only(right: 16.0),
-                      child: Icon(Icons.arrow_drop_down,
-                          color: context.theme.subtitletext,),
+                      child: Icon(
+                        Icons.arrow_drop_down,
+                        color: context.theme.subtitletext,
+                      ),
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 10),
 
-              // Password Input
-              _buildPasswordField(
-                _passwordController,
-                'Password',
-                _obscurePassword,
-                (value) {
-                  setState(() {
-                    _obscurePassword = value;
-                  });
-                },
-              ),
-              SizedBox(height: 10),
-
-              // Confirm Password Input
-              _buildPasswordField(
-                _confirmPasswordController,
-                'Confirm Password',
-                _obscureConfirmPassword,
-                (value) {
-                  setState(() {
-                    _obscureConfirmPassword = value;
-                  });
-                },
-              ),
-              SizedBox(height: 20),
+              SizedBox(height: 30),
 
               // Register Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CreatePassword()),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.theme.primecolor,
                     padding: EdgeInsets.symmetric(vertical: 16),
@@ -151,7 +148,7 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                   ),
-                  child: Text('Register',
+                  child: Text('Continue',
                       style: TextStyle(fontSize: 17, color: Colors.white)),
                 ),
               ),
@@ -163,8 +160,7 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
     );
   }
 
-  Widget _buildTextField(
-      TextEditingController controller, String label,
+  Widget _buildTextField(TextEditingController controller, String label,
       [TextInputType? keyboardType]) {
     return TextField(
       controller: controller,
@@ -173,52 +169,21 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
       cursorHeight: 18,
       keyboardType: keyboardType,
       decoration: InputDecoration(
-        hintText: label,
-        hintStyle: TextStyle(color: context.theme.subtitletext,),
+        labelText: label,
+        labelStyle: TextStyle(
+          fontSize: 17,
+          color: context.theme.subtitletext,
+        ),
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor,),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField(
-    TextEditingController controller,
-    String label,
-    bool obscureText,
-    Function(bool) onToggleVisibility,
-  ) {
-    return TextField(
-      controller: controller,
-      style: TextStyle(fontSize: 18),
-      cursorColor: context.theme.primecolor,
-      cursorHeight: 18,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        hintText: label,
-        hintStyle: TextStyle(color: context.theme.subtitletext,),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor,),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
-        ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            obscureText ? Icons.visibility_off : Icons.visibility,
-            color: context.theme.subtitletext,
-            size: 20,
+          borderSide: BorderSide(
+            color: context.theme.primecolor,
           ),
-          onPressed: () {
-            onToggleVisibility(!obscureText);
-          },
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
         ),
       ),
     );
