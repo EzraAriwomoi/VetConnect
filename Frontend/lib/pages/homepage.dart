@@ -6,19 +6,23 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // PageController to control the PageView
   PageController _pageController = PageController();
+  ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
+  bool _showAppBarTitle = false;
 
   @override
   void initState() {
     super.initState();
-
-    // Automatically change the page every 3 seconds
     Future.delayed(Duration(seconds: 3), _autoSlide);
+    _scrollController.addListener(() {
+      setState(() {
+        // Show "VetConnect" when scrolled down past the header height
+        _showAppBarTitle = _scrollController.offset > 100;
+      });
+    });
   }
 
-  // Function to change the page every 3 seconds
   void _autoSlide() {
     if (_pageController.hasClients) {
       int nextPage = (_currentPage + 1) % 3; // Loop back to the first card
@@ -27,8 +31,6 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _currentPage = nextPage;
       });
-
-      // Call the function again to keep sliding
       Future.delayed(Duration(seconds: 3), _autoSlide);
     }
   }
@@ -37,32 +39,48 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('VetConnect',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        title: _showAppBarTitle
+            ? Text(
+                'VetConnect',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              )
+            : null,
         backgroundColor: Colors.lightBlue,
-        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.calendar_today),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: Icon(Icons.notifications),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Welcome Section
             Container(
               padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.lightBlue,
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(20)),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome to VetConnect!',
+                    'Welcome Ezra',
                     style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                   SizedBox(height: 10),
                   Text(
@@ -73,12 +91,10 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 20),
-
-            // Main Features Section with Card Slideshow
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Container(
-                height: 300, // Height of the card slideshow
+                height: 250,
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: (page) {
@@ -87,40 +103,35 @@ class _HomePageState extends State<HomePage> {
                     });
                   },
                   children: [
-                    _buildFeatureCard(
-                      icon: Icons.search,
-                      title: 'Find a Veterinarian',
-                      description: 'Locate veterinarians near you.',
-                      onTap: () {
-                        // Navigation to map or search feature
-                      },
+                    _buildAnimalSlider(
+                      imagePath: 'assets/user_guide1.png',
+                      description: 'This is a description for animal 1...',
+                      showIcon: true,
                     ),
-                    _buildFeatureCard(
-                      icon: Icons.calendar_today,
-                      title: 'Book an Appointment',
-                      description: 'Schedule consultations with ease.',
-                      onTap: () {
-                        // Navigation to booking screen
-                      },
+                    _buildAnimalSlider(
+                      imagePath: 'assets/user_guide1.png',
+                      description: 'Here\'s some info about animal 2...',
+                      showIcon: false,
                     ),
-                    _buildFeatureCard(
-                      icon: Icons.help_outline,
-                      title: 'Helpdesk',
-                      description: 'Get support for your veterinary needs.',
-                      onTap: () {
-                        // Navigation to helpdesk feature
-                      },
+                    _buildAnimalSlider(
+                      imagePath: 'assets/user_guide1.png',
+                      description: 'Details regarding animal 3 are here...',
+                      showIcon: true,
+                    ),
+                    _buildAnimalSlider(
+                      imagePath: 'assets/user_guide1.png',
+                      description: 'Details regarding animal 4 are here...',
+                      showIcon: false,
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 10),
-            // Dots Indicator
+            SizedBox(height: 20),
             Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (index) {
+                children: List.generate(4, (index) {
                   return AnimatedContainer(
                     duration: Duration(milliseconds: 300),
                     margin: EdgeInsets.symmetric(horizontal: 5),
@@ -136,26 +147,95 @@ class _HomePageState extends State<HomePage> {
                 }),
               ),
             ),
-            SizedBox(height: 20),
-
-            // Information Section
-            Container(
-              padding: EdgeInsets.all(20),
-              color: Colors.lightBlue.withOpacity(0.1),
+            SizedBox(height: 30),
+            // "Our Best Veterinarians" Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Why Choose VetConnect?',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.lightBlue),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Our Best Veterinarians',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.lightBlue,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // Action to navigate to the list of all veterinarians
+                        },
+                        child: Text(
+                          'See All',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.lightBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    'VetConnect is designed to make accessing veterinary care simple and efficient. Whether you\'re an animal owner or a veterinarian, our platform offers seamless communication, appointment booking, and access to health records.',
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                  SizedBox(height: 15),
+                  Column(
+                    children: List.generate(5, (index) {
+                      return Card(
+                        elevation: 3,
+                        margin: EdgeInsets.symmetric(vertical: 8),
+                        child: Padding(
+                          padding: EdgeInsets.all(15),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 30,
+                                backgroundImage:
+                                    AssetImage('assets/user_guide1.png'),
+                              ),
+                              SizedBox(width: 15),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Dr. Veterinarian Name',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Vet Clinic Name',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.star,
+                                            color: Colors.orange, size: 18),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          '5 years of experience',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
                   ),
                 ],
               ),
@@ -164,78 +244,90 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // Ensures that all items (icons and labels) are visible
+        type: BottomNavigationBarType.fixed,
         items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
+              icon: Icon(Icons.pets_outlined), label: 'Services'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.pets_outlined),
-            label: 'Services',
-          ),
+              icon: Icon(Icons.message_rounded), label: 'Messages'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.message_rounded),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Profile',
-          ),
+              icon: Icon(Icons.account_circle), label: 'Profile'),
         ],
         selectedItemColor: Colors.lightBlue,
         unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          // Handle navigation to different sections based on index
-        },
+        onTap: (index) {},
       ),
     );
   }
 
-  // Helper function to build feature cards
-  Widget _buildFeatureCard(
-      {required IconData icon,
-      required String title,
-      required String description,
-      required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        elevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        margin: EdgeInsets.symmetric(horizontal: 5, vertical: 25),
-        child: Container(
-          padding: EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.01),
-                blurRadius: 10,
-                offset: Offset(4, 0),
+  Widget _buildAnimalSlider({
+    required String imagePath,
+    required String description,
+    bool showIcon = true,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(imagePath),
+                fit: BoxFit.cover,
               ),
-            ],
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 50, color: Colors.lightBlue),
-              SizedBox(height: 15),
-              Text(
-                title,
-                style: TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lightBlue),
+          if (showIcon)
+            Positioned(
+              top: 10,
+              left: 10,
+              child: Icon(
+                Icons.info,
+                color: const Color.fromARGB(255, 240, 225, 89),
+                size: 22,
               ),
-              SizedBox(height: 10),
-              Text(
-                description,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black54),
+            ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
               ),
-            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  SizedBox(height: 5),
+                  GestureDetector(
+                    onTap: () {},
+                    child: Text(
+                      '...READ MORE',
+                      style: TextStyle(
+                        color: Colors.lightBlue,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
