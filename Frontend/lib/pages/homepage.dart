@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -17,7 +18,6 @@ class _HomePageState extends State<HomePage> {
     Future.delayed(Duration(seconds: 3), _autoSlide);
     _scrollController.addListener(() {
       setState(() {
-        // Show "VetConnect" when scrolled down past the header height
         _showAppBarTitle = _scrollController.offset > 100;
       });
     });
@@ -25,7 +25,7 @@ class _HomePageState extends State<HomePage> {
 
   void _autoSlide() {
     if (_pageController.hasClients) {
-      int nextPage = (_currentPage + 1) % 3; // Loop back to the first card
+      int nextPage = (_currentPage + 1) % 3;
       _pageController.animateToPage(nextPage,
           duration: Duration(seconds: 1), curve: Curves.easeInOut);
       setState(() {
@@ -43,19 +43,30 @@ class _HomePageState extends State<HomePage> {
             ? Text(
                 'VetConnect',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
+                  color: const Color.fromARGB(255, 39, 39, 39),
                 ),
               )
             : null,
         backgroundColor: Colors.lightBlue,
         actions: [
           IconButton(
+            icon: Icon(Icons.search_rounded),
+            iconSize: 24,
+            color: const Color.fromARGB(255, 39, 39, 39),
+            onPressed: () {},
+          ),
+          IconButton(
             icon: Icon(Icons.calendar_today),
+            iconSize: 22,
+            color: const Color.fromARGB(255, 39, 39, 39),
             onPressed: () {},
           ),
           IconButton(
             icon: Icon(Icons.notifications),
+            iconSize: 24,
+            color: const Color.fromARGB(255, 39, 39, 39),
             onPressed: () {},
           ),
         ],
@@ -69,7 +80,8 @@ class _HomePageState extends State<HomePage> {
               padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.lightBlue,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,13 +91,16 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: const Color.fromARGB(255, 39, 39, 39),
                     ),
                   ),
                   SizedBox(height: 10),
                   Text(
                     'Connecting you with veterinary care at your fingertips.',
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: const Color.fromARGB(255, 71, 70, 70),
+                    ),
                   ),
                 ],
               ),
@@ -95,6 +110,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Container(
                 height: 250,
+                width: 12,
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: (page) {
@@ -148,7 +164,42 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 30),
-            // "Our Best Veterinarians" Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Discover the nearest vet for your animal',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.lightBlue,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Use our interactive map to find the closest veterinary clinics in your area. Simply input your location and let us guide you to the nearest expert care for your animal.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    height: 250,
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(-1.286389, 36.817223),
+                        zoom: 12,
+                      ),
+                      onMapCreated: (GoogleMapController controller) {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 30),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Column(
@@ -166,9 +217,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {
-                          // Action to navigate to the list of all veterinarians
-                        },
+                        onPressed: () {},
                         child: Text(
                           'See All',
                           style: TextStyle(
