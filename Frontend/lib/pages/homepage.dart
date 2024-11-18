@@ -292,21 +292,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.pets_outlined), label: 'Services'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.message_rounded), label: 'Messages'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle), label: 'Profile'),
-        ],
-        selectedItemColor: Colors.lightBlue,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {},
-      ),
     );
   }
 
