@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vetconnect/components/themes/darkmode.dart';
 import 'package:vetconnect/components/themes/lightmode.dart';
 // import 'package:vetconnect/pages/guides/user_guide1.dart';
-import 'package:vetconnect/pages/homepage.dart';
+// import 'package:vetconnect/pages/homepage.dart';
 
 import 'components/controls/bottom_navigations.dart';
 

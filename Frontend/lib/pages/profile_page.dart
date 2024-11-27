@@ -36,17 +36,13 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Profile Picture
               CircleAvatar(
                 radius: 60,
                 backgroundImage: AssetImage('assets/user_guide1.png'),
                 child: Align(
                   alignment: Alignment.bottomRight,
                   child: GestureDetector(
-                    onTap: () {
-                      // Logic to change profile picture
-                      print("Change profile picture tapped");
-                    },
+                    onTap: () {},
                     child: CircleAvatar(
                       radius: 20,
                       backgroundColor: Colors.lightBlue,
@@ -59,8 +55,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // User Name
               Text(
                 name,
                 style: const TextStyle(
@@ -77,8 +71,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Editable Details
               _buildDetailRow(Icons.email, "Email", email, (value) {
                 email = value;
               }),
@@ -90,10 +82,7 @@ class _ProfilePageState extends State<ProfilePage> {
               _buildDetailRow(Icons.home, "Address", address, (value) {
                 address = value;
               }),
-
               const SizedBox(height: 30),
-
-              // Animal Registration Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -112,13 +101,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
               const SizedBox(height: 10),
-
-              // List of Registered Animals
               ...animals.map((animal) => _buildAnimalCard(context, animal)),
-
               const SizedBox(height: 20),
-
-              // Save/Cancel Buttons
               if (isEditing)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -147,8 +131,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ],
                 ),
-
-              // Edit Button
               if (!isEditing)
                 ElevatedButton(
                   onPressed: () {
@@ -224,7 +206,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 setState(() {
                   animals.remove(animal);
                 });
-                print("Animal removed");
               },
               icon: const Icon(Icons.delete, color: Colors.red),
             ),
@@ -234,7 +215,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showAnimalFormDialog(BuildContext context, Map<String, String>? animal) {
+  void _showAnimalFormDialog(
+      BuildContext context, Map<String, String>? animal) {
     final nameController =
         TextEditingController(text: animal != null ? animal["name"] : "");
     final breedController =
@@ -274,14 +256,12 @@ class _ProfilePageState extends State<ProfilePage> {
             ElevatedButton(
               onPressed: () {
                 if (animal != null) {
-                  // Edit existing animal
                   setState(() {
                     animal["name"] = nameController.text;
                     animal["breed"] = breedController.text;
                     animal["age"] = ageController.text;
                   });
                 } else {
-                  // Add new animal
                   setState(() {
                     animals.add({
                       "name": nameController.text,
@@ -292,7 +272,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 }
                 Navigator.of(context).pop();
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
               child: const Text("Save"),
             ),
           ],

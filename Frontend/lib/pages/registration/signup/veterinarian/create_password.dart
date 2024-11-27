@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vetconnect/components/extension/custom_theme.dart';
+import 'package:vetconnect/pages/homepage.dart';
 
 class CreatePassword extends StatefulWidget {
   const CreatePassword({super.key});
@@ -31,9 +32,7 @@ class _CreatePasswordState extends State<CreatePassword> {
         actions: [
           IconButton(
             icon: Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () {
-              
-            },
+            onPressed: () {},
           ),
         ],
       ),
@@ -98,7 +97,14 @@ class _CreatePasswordState extends State<CreatePassword> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomePage(),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.theme.primecolor,
                     padding: EdgeInsets.symmetric(vertical: 16),
