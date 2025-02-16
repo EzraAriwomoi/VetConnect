@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:vetconnect/pages/doc_profile.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -11,6 +12,29 @@ class _HomePageState extends State<HomePage> {
   ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
   bool _showAppBarTitle = false;
+
+  List<Map<String, String>> veterinarians = [
+    {
+      "name": "Dr. David",
+      "clinicName": "Paws Care",
+      "imagePath": "assets/user_guide1.png"
+    },
+    {
+      "name": "Dr. Emily",
+      "clinicName": "Healthy Pets",
+      "imagePath": "assets/user_guide1.png"
+    },
+    {
+      "name": "Dr. David",
+      "clinicName": "Paws Care",
+      "imagePath": "assets/user_guide1.png"
+    },
+    {
+      "name": "Dr. Emily",
+      "clinicName": "Healthy Pets",
+      "imagePath": "assets/user_guide1.png"
+    },
+  ];
 
   @override
   void initState() {
@@ -230,46 +254,78 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   SizedBox(height: 15),
-                  Column(
-                    children: List.generate(5, (index) {
-                      return Card(
-                        elevation: 3,
-                        margin: EdgeInsets.symmetric(vertical: 8),
-                        child: Padding(
-                          padding: EdgeInsets.all(15),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 30,
-                                backgroundImage:
-                                    AssetImage('assets/user_guide1.png'),
+                  SizedBox(
+                    height: 250,
+                    child: ListView.builder(
+                      itemCount: veterinarians.length,
+                      itemBuilder: (context, index) {
+                        final vet = veterinarians[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DoctorProfilePage(
+                                  name: vet["name"]!,
+                                  clinicName: vet["clinicName"]!,
+                                  imagePath: vet["imagePath"]!,
+                                ),
                               ),
-                              SizedBox(width: 15),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Dr. Veterinarian Name',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.asset(
+                                      vet["imagePath"]!,
+                                      width: 75,
+                                      height: 75,
+                                      fit: BoxFit.cover,
                                     ),
-                                    Text(
-                                      'Vet Clinic Name',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey[700],
-                                      ),
-                                    ),
-                                    Row(
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Icon(Icons.star,
-                                            color: Colors.orange, size: 18),
-                                        SizedBox(width: 5),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              vet["name"]!,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Icon(
+                                              Icons.verified,
+                                              size: 16,
+                                              color: Colors.blueAccent,
+                                            ),
+                                          ],
+                                        ),
                                         Text(
-                                          '5 years of experience',
+                                          vet["clinicName"]!,
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Colors.grey[600],
@@ -277,14 +333,39 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.bookmark_border_outlined,
+                                        color: Colors.black,
+                                        size: 30,
+                                      ),
+                                      const SizedBox(width: 20),
+                                      Container(
+                                        width: 28,
+                                        height: 28,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.black,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: IconButton(
+                                          onPressed: () {},
+                                          icon: const Icon(Icons.arrow_forward,
+                                              size: 20, color: Colors.white),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      );
-                    }),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
