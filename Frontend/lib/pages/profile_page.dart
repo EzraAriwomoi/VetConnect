@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vetconnect/pages/doc_profile.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -271,29 +272,42 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget buildFavoritesTab() {
-    return Column(
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const Text(
-                "Your Trusted Doctors",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
+  return Column(
+    children: [
+      // Header
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const Text(
+              "Your Trusted Doctors",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
+      ),
 
-        // List of favorite doctors
-        Expanded(
-          child: ListView.builder(
-            itemCount: 3, // Change as needed
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemBuilder: (context, index) {
-              return Container(
+      // List of favorite doctors
+      Expanded(
+        child: ListView.builder(
+          itemCount: 3,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DoctorProfilePage(
+                      name: "Dr. David",
+                      clinicName: "Vet Clinic Name",
+                      imagePath: "assets/user_guide1.png",
+                    ),
+                  ),
+                );
+              },
+              child: Container(
                 margin: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -398,7 +412,18 @@ class _ProfilePageState extends State<ProfilePage>
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DoctorProfilePage(
+                                      name: "Dr. David",
+                                      clinicName: "Vet Clinic Name",
+                                      imagePath: "assets/user_guide1.png",
+                                    ),
+                                  ),
+                                );
+                              },
                               icon: const Icon(Icons.arrow_forward,
                                   size: 16, color: Colors.white),
                               padding: EdgeInsets.zero,
@@ -410,11 +435,13 @@ class _ProfilePageState extends State<ProfilePage>
                     ),
                   ],
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 }

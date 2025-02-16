@@ -350,7 +350,20 @@ class _HomePageState extends State<HomePage> {
                                           shape: BoxShape.circle,
                                         ),
                                         child: IconButton(
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    DoctorProfilePage(
+                                                  name: vet["name"]!,
+                                                  clinicName:
+                                                      vet["clinicName"]!,
+                                                  imagePath: vet["imagePath"]!,
+                                                ),
+                                              ),
+                                            );
+                                          },
                                           icon: const Icon(Icons.arrow_forward,
                                               size: 20, color: Colors.white),
                                           padding: EdgeInsets.zero,
