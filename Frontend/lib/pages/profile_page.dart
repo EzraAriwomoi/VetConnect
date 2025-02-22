@@ -31,28 +31,22 @@ class _ProfilePageState extends State<ProfilePage>
       appBar: AppBar(
         backgroundColor: Colors.lightBlue,
         elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 18.0),
-              child: Text(
-                'Profile',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 24,
-                ),
-              ),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 18.0),
+          child: const Text(
+            'Profile',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
             ),
-            IconButton(
-              icon: Icon(
-                Icons.settings,
-                color: Colors.black,
-              ),
-              onPressed: () {},
-            ),
-          ],
+          ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.black),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -272,176 +266,175 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget buildFavoritesTab() {
-  return Column(
-    children: [
-      // Header
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const Text(
-              "Your Trusted Doctors",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ],
+    return Column(
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const Text(
+                "Your Trusted Doctors",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
-      ),
 
-      // List of favorite doctors
-      Expanded(
-        child: ListView.builder(
-          itemCount: 3,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DoctorProfilePage(
-                      name: "Dr. David",
-                      clinicName: "Vet Clinic Name",
-                      imagePath: "assets/user_guide1.png",
+        // List of favorite doctors
+        Expanded(
+          child: ListView.builder(
+            itemCount: 3,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DoctorProfilePage(
+                        name: "Dr. David",
+                        clinicName: "Vet Clinic Name",
+                        imagePath: "assets/user_guide1.png",
+                      ),
                     ),
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                );
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(6),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Profile Image
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              'assets/user_guide1.png',
-                              width: 75,
-                              height: 75,
-                              fit: BoxFit.cover,
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Profile Image
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.asset(
+                                'assets/user_guide1.png',
+                                width: 75,
+                                height: 75,
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
+                            const SizedBox(width: 12),
 
-                          // Doctor Details
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Text(
-                                      'Dr. David',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                            // Doctor Details
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'Dr. David',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Icon(
+                                        Icons.verified,
+                                        size: 16,
+                                        color: Colors.blueAccent,
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    'Vet Clinic Name',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 5,
+                        right: 8,
+                        child: Row(
+                          children: [
+                            // Remove Button
+                            SizedBox(
+                              height: 28,
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      const Color.fromARGB(255, 238, 110, 110),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 3),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Remove",
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+
+                            // Arrow Button
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: const BoxDecoration(
+                                color: Colors.black,
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => DoctorProfilePage(
+                                        name: "Dr. David",
+                                        clinicName: "Vet Clinic Name",
+                                        imagePath: "assets/user_guide1.png",
                                       ),
                                     ),
-                                    const SizedBox(width: 5),
-                                    Icon(
-                                      Icons.verified,
-                                      size: 16,
-                                      color: Colors.blueAccent,
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  'Vet Clinic Name',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 5,
-                      right: 8,
-                      child: Row(
-                        children: [
-                          // Remove Button
-                          SizedBox(
-                            height: 28,
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    const Color.fromARGB(255, 238, 110, 110),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 3),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              child: const Text(
-                                "Remove",
-                                style: TextStyle(fontSize: 12),
+                                  );
+                                },
+                                icon: const Icon(Icons.arrow_forward,
+                                    size: 16, color: Colors.white),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-
-                          // Arrow Button
-                          Container(
-                            width: 28,
-                            height: 28,
-                            decoration: const BoxDecoration(
-                              color: Colors.black,
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => DoctorProfilePage(
-                                      name: "Dr. David",
-                                      clinicName: "Vet Clinic Name",
-                                      imagePath: "assets/user_guide1.png",
-                                    ),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.arrow_forward,
-                                  size: 16, color: Colors.white),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
-      ),
-    ],
-  );
-}
-
+      ],
+    );
+  }
 }

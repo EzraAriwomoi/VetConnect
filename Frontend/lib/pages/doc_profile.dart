@@ -229,7 +229,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: serviceCard("Communicate", Icons.chat),
+                child: serviceCard("Consultation", Icons.chat),
               ),
             ],
           ),
@@ -250,14 +250,14 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
   Widget serviceCard(String title, IconData icon) {
     final Map<String, Color> bgColors = {
       "Book an appointment": const Color.fromARGB(255, 200, 252, 226),
-      "Communicate": const Color.fromARGB(255, 216, 230, 252),
+      "Consultation": const Color.fromARGB(255, 216, 230, 252),
       "Request a call": const Color.fromARGB(255, 252, 225, 223),
     };
 
     // Text colors
     final Map<String, Color> textColors = {
       "Book an appointment": Colors.green.shade900,
-      "Communicate": Colors.blue.shade900,
+      "Consultation": Colors.blue.shade900,
       "Request a call": Colors.red.shade900,
     };
 
