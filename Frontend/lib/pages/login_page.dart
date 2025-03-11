@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:vetconnect/components/extension/custom_theme.dart';
+import 'package:vetconnect/pages/homepage.dart';
+import 'package:vetconnect/pages/registration/selection_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,8 +15,79 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController1 = TextEditingController();
   final TextEditingController _passwordController1 = TextEditingController();
-
   bool _obscurePassword1 = true;
+  bool _isLoading = false;
+  bool _isEmailValid = true;
+  bool _isPasswordValid = true;
+
+  Future<void> _login() async {
+    setState(() {
+      _isEmailValid = _emailController1.text.isNotEmpty &&
+          RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+              .hasMatch(_emailController1.text);
+      _isPasswordValid = _passwordController1.text.isNotEmpty;
+    });
+
+    if (!_isEmailValid || !_isPasswordValid) {
+      return; // Don't proceed if validation fails
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final response = await http.post(
+      // Uri.parse('http://10.10.113.75:5000/login'),
+      Uri.parse('http://192.168.201.58:5000/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': _emailController1.text,
+        'password': _passwordController1.text,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      String userType = data['user_type'];
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Login successful",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: const Color.fromARGB(255, 46, 160, 50),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      await Future.delayed(Duration(seconds: 2));
+
+      if (userType == 'animal_owner' || userType == 'veterinarian') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            data['message'],
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: const Color.fromARGB(255, 250, 109, 99),
+        ),
+      );
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -90,18 +165,31 @@ class _LoginPageState extends State<LoginPage> {
                     // Login Button
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.theme.primecolor,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0),
+                      child: Opacity(
+                        opacity: _isLoading ? 0.3 : 1.0,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? () {} : _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: context.theme.primecolor,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          'Login',
-                          style: TextStyle(fontSize: 17, color: Colors.white),
+                          child: _isLoading
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                              : Text(
+                                  'Login',
+                                  style: TextStyle(
+                                      fontSize: 17, color: Colors.white),
+                                ),
                         ),
                       ),
                     ),
@@ -148,7 +236,10 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         label: Text(
                           'Sign in with Google',
-                          style: TextStyle(fontSize: 17, color: context.theme.titletext,),
+                          style: TextStyle(
+                            fontSize: 17,
+                            color: context.theme.titletext,
+                          ),
                         ),
                         style: ButtonStyle(
                           backgroundColor:
@@ -156,8 +247,9 @@ class _LoginPageState extends State<LoginPage> {
                           overlayColor: MaterialStateProperty.all(
                               Color.fromARGB(255, 10, 54, 61)),
                           elevation: MaterialStateProperty.all(0),
-                          side: MaterialStateProperty.all(
-                              BorderSide(color: context.theme.subtitletext,)),
+                          side: MaterialStateProperty.all(BorderSide(
+                            color: context.theme.subtitletext,
+                          )),
                           padding: MaterialStateProperty.all(
                               EdgeInsets.symmetric(vertical: 8)),
                           shape: MaterialStateProperty.all(
@@ -188,7 +280,13 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const UserSelectionPage()),
+                      );
+                    },
                     child: Text(
                       'Sign Up',
                       style: TextStyle(
@@ -217,15 +315,27 @@ class _LoginPageState extends State<LoginPage> {
           color: context.theme.subtitletext,
           fontSize: 18,
         ),
-        prefixIcon: Icon(Icons.email, color: context.theme.primecolor,),
+        prefixIcon: Icon(
+          Icons.email,
+          color: context.theme.primecolor,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor,),
+          borderSide: BorderSide(
+            color: _isEmailValid
+                ? context.theme.primecolor
+                : const Color.fromARGB(255, 250, 109, 99),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
+          borderSide: BorderSide(
+              color: _isEmailValid
+                  ? context.theme.primecolor
+                  : const Color.fromARGB(255, 250, 109, 99),
+              width: 2.0),
         ),
+        errorText: _isEmailValid ? null : 'Enter a valid email',
       ),
       keyboardType: TextInputType.emailAddress,
     );
@@ -249,15 +359,27 @@ class _LoginPageState extends State<LoginPage> {
           color: context.theme.subtitletext,
           fontSize: 18,
         ),
-        prefixIcon: Icon(Icons.lock, color: context.theme.primecolor,),
+        prefixIcon: Icon(
+          Icons.lock,
+          color: context.theme.primecolor,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor,),
+          borderSide: BorderSide(
+            color: _isPasswordValid
+                ? context.theme.primecolor
+                : const Color.fromARGB(255, 250, 109, 99),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
+          borderSide: BorderSide(
+              color: _isPasswordValid
+                  ? context.theme.primecolor
+                  : const Color.fromARGB(255, 250, 109, 99),
+              width: 2.0),
         ),
+        errorText: _isPasswordValid ? null : 'Password cannot be empty',
         suffixIcon: IconButton(
           icon: Icon(
             obscureText ? Icons.visibility_off : Icons.visibility,

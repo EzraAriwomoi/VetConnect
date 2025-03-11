@@ -1,21 +1,9 @@
-from flask import Flask, jsonify, request
+from app import create_app
 from flask_cors import CORS
-import mysql.connector
 
-app = Flask(__name__)
-CORS(app)
+app = create_app()
 
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="arish",
-    database="vetconnect_db"
-)
-cursor = db.cursor()
-
-@app.route('/')
-def home():
-    return jsonify({"message": "VetConnect API is running!"})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

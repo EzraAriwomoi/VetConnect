@@ -1,9 +1,26 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:vetconnect/components/extension/custom_theme.dart';
-import 'package:vetconnect/pages/homepage.dart';
+import 'package:vetconnect/pages/login_page.dart';
 
 class CreatePassword extends StatefulWidget {
-  const CreatePassword({super.key});
+  final String name;
+  final String email;
+  final String licenseNumber;
+  final String nationalID;
+  final String clinic;
+  final String? specialization;
+
+  const CreatePassword({
+    super.key,
+    required this.name,
+    required this.email,
+    required this.licenseNumber,
+    required this.nationalID,
+    required this.clinic,
+    this.specialization,
+  });
 
   @override
   _CreatePasswordState createState() => _CreatePasswordState();
@@ -16,6 +33,79 @@ class _CreatePasswordState extends State<CreatePassword> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
+  bool _isPasswordValid = true;
+
+  Future<void> registerVeterinarian() async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Passwords do not match!')),
+      );
+      return;
+    }
+
+    if (!_isPasswordValid) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _isPasswordValid = _passwordController.text.isNotEmpty;
+    });
+
+    // final url = Uri.parse('http://10.10.113.75:5000/register/veterinarian');
+    final url = Uri.parse('http://192.168.201.58:5000/register/veterinarian');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "name": widget.name,
+        "email": widget.email,
+        "password": _passwordController.text,
+        "license_number": widget.licenseNumber,
+        "national_id": widget.nationalID,
+        "clinic": widget.clinic,
+        "specialization": widget.specialization,
+      }),
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (response.statusCode == 201) {
+      print('Veterinarian registered successfully!');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Account created successfully!",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: const Color.fromARGB(255, 46, 160, 50),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      await Future.delayed(Duration(seconds: 2));
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
+    } else {
+      print('Error: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Registration failed. Try again!'),
+          backgroundColor: const Color.fromARGB(255, 250, 109, 99),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,14 +187,7 @@ class _CreatePasswordState extends State<CreatePassword> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomePage(),
-                      ),
-                    );
-                  },
+                  onPressed: _isLoading ? () {} : registerVeterinarian,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.theme.primecolor,
                     padding: EdgeInsets.symmetric(vertical: 16),
@@ -112,8 +195,19 @@ class _CreatePasswordState extends State<CreatePassword> {
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                   ),
-                  child: Text('Register',
-                      style: TextStyle(fontSize: 17, color: Colors.white)),
+                  child: _isLoading
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : Text(
+                          'Register',
+                          style: TextStyle(fontSize: 17, color: Colors.white),
+                        ),
                 ),
               ),
               SizedBox(height: 10),
@@ -146,12 +240,18 @@ class _CreatePasswordState extends State<CreatePassword> {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
           borderSide: BorderSide(
-            color: context.theme.primecolor,
+            color: _isPasswordValid
+                ? context.theme.primecolor
+                : const Color.fromARGB(255, 250, 109, 99),
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
+          borderSide: BorderSide(
+              color: _isPasswordValid
+                  ? context.theme.primecolor
+                  : const Color.fromARGB(255, 250, 109, 99),
+              width: 2.0),
         ),
         suffixIcon: IconButton(
           icon: Icon(

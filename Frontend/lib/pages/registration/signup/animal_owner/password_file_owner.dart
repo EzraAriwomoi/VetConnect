@@ -1,9 +1,22 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:vetconnect/components/extension/custom_theme.dart';
-import 'package:vetconnect/pages/homepage.dart';
+import 'package:vetconnect/pages/login_page.dart';
 
 class PasswordFileOwnerPage extends StatefulWidget {
-  const PasswordFileOwnerPage({super.key});
+  final String name;
+  final String email;
+  final String phone;
+  final String location;
+
+  const PasswordFileOwnerPage({
+    super.key,
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.location,
+  });
 
   @override
   _PasswordFileOwnerPageState createState() => _PasswordFileOwnerPageState();
@@ -16,6 +29,83 @@ class _PasswordFileOwnerPageState extends State<PasswordFileOwnerPage> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
+  bool _isPasswordValid = true;
+
+  Future<void> registerAnimalOwner() async {
+    if (_passwordController.text.isEmpty) {
+      setState(() {
+        _isPasswordValid = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Password cannot be empty!')),
+      );
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Passwords do not match!')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    print('Password: "${_passwordController.text}"'); // Debugging
+
+    final url = Uri.parse('http://192.168.201.58:5000/register/animal_owner');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "name": widget.name,
+        "email": widget.email,
+        "password": _passwordController.text,
+        "phone": widget.phone,
+        "location": widget.location,
+      }),
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (response.statusCode == 201) {
+      print('User registered successfully!');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Account created successfully!",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: const Color.fromARGB(255, 46, 160, 50),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      await Future.delayed(Duration(seconds: 2));
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
+    } else {
+      print('Error: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Registration failed. Try again!'),
+          backgroundColor: const Color.fromARGB(255, 250, 109, 99),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,12 +189,7 @@ class _PasswordFileOwnerPageState extends State<PasswordFileOwnerPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomePage()),
-                    );
-                  },
+                  onPressed: _isLoading ? () {} : registerAnimalOwner,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.theme.primecolor,
                     padding: EdgeInsets.symmetric(vertical: 16),
@@ -112,10 +197,19 @@ class _PasswordFileOwnerPageState extends State<PasswordFileOwnerPage> {
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                   ),
-                  child: Text(
-                    'Register',
-                    style: TextStyle(fontSize: 17, color: Colors.white),
-                  ),
+                  child: _isLoading
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : Text(
+                          'Register',
+                          style: TextStyle(fontSize: 17, color: Colors.white),
+                        ),
                 ),
               ),
               SizedBox(height: 20),
@@ -159,13 +253,18 @@ class _PasswordFileOwnerPageState extends State<PasswordFileOwnerPage> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
               borderSide: BorderSide(
-                color: context.theme.primecolor,
+                color: _isPasswordValid
+                    ? context.theme.primecolor
+                    : const Color.fromARGB(255, 250, 109, 99),
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
-              borderSide:
-                  BorderSide(color: context.theme.primecolor, width: 2.0),
+              borderSide: BorderSide(
+                  color: _isPasswordValid
+                      ? context.theme.primecolor
+                      : const Color.fromARGB(255, 250, 109, 99),
+                  width: 2.0),
             ),
           ),
         ),

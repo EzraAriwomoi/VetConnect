@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vetconnect/pages/appointment_page.dart';
 
 class DoctorProfilePage extends StatefulWidget {
   final String name;
@@ -225,7 +226,17 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Expanded(
-                child: serviceCard("Book an appointment", Icons.calendar_today),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AppointmentPage()),
+                    );
+                  },
+                  child:
+                      serviceCard("Book an appointment", Icons.calendar_today),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
