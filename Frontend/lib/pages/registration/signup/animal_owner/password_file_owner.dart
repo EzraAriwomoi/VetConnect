@@ -199,8 +199,8 @@ class _PasswordFileOwnerPageState extends State<PasswordFileOwnerPage> {
                   ),
                   child: _isLoading
                       ? SizedBox(
-                          width: 24,
-                          height: 24,
+                          width: 22,
+                          height: 22,
                           child: CircularProgressIndicator(
                             color: Colors.white,
                             strokeWidth: 3,

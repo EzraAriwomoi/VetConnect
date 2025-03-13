@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:vetconnect/components/extension/custom_theme.dart';
 import 'package:vetconnect/pages/homepage.dart';
+import 'package:vetconnect/pages/registration/forgot_password.dart';
 import 'package:vetconnect/pages/registration/selection_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -29,7 +30,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (!_isEmailValid || !_isPasswordValid) {
-      return; // Don't proceed if validation fails
+      return;
     }
 
     setState(() {
@@ -98,207 +99,218 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 40.0),
-                child: Column(
+    return GestureDetector(
+    onTap: () {
+      FocusScope.of(context).unfocus();
+    },
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 40.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20.0),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          height: 150,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Welcome Back!!',
+                        style: TextStyle(
+                          fontSize: 26,
+                          color: context.theme.titletext,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+      
+                      // Email Input
+                      _buildEmailField(_emailController1, 'Email'),
+                      SizedBox(height: 15),
+      
+                      // Password Input
+                      _buildPasswordField(
+                        _passwordController1,
+                        'Password',
+                        _obscurePassword1,
+                        (value) {
+                          setState(() {
+                            _obscurePassword1 = value;
+                          });
+                        },
+                      ),
+      
+                      SizedBox(height: 10),
+      
+                      // Forgot Password
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ForgotPasswordPage()),
+                              );
+                            },
+                            child: Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                color: context.theme.primecolor,
+                                fontSize: 17,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+      
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: Opacity(
+                          opacity: _isLoading ? 0.3 : 1.0,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? () {} : _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: context.theme.primecolor,
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                            child: _isLoading
+                                ? SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                    ),
+                                  )
+                                : Text(
+                                    'Login',
+                                    style: TextStyle(
+                                        fontSize: 17, color: Colors.white),
+                                  ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 60),
+      
+                      // OR Continue with Section
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              thickness: 1,
+                              color: context.theme.subtitletext,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                            child: Text(
+                              "Or continue with",
+                              style: TextStyle(
+                                color: context.theme.subtitletext,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              thickness: 1,
+                              color: context.theme.subtitletext,
+                            ),
+                          ),
+                        ],
+                      ),
+      
+                      SizedBox(height: 20),
+      
+                      // Continue with Google Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {},
+                          icon: Image.asset(
+                            'assets/google_icon.png',
+                            height: 36,
+                          ),
+                          label: Text(
+                            'Sign in with Google',
+                            style: TextStyle(
+                              fontSize: 17,
+                              color: context.theme.titletext,
+                            ),
+                          ),
+                          style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all(Colors.transparent),
+                            overlayColor: MaterialStateProperty.all(
+                                Color.fromARGB(255, 10, 54, 61)),
+                            elevation: MaterialStateProperty.all(0),
+                            side: MaterialStateProperty.all(BorderSide(
+                              color: context.theme.subtitletext,
+                            )),
+                            padding: MaterialStateProperty.all(
+                                EdgeInsets.symmetric(vertical: 8)),
+                            shape: MaterialStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 70),
+                    ],
+                  ),
+                ),
+              ),
+      
+              // Sign Up
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20.0),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        height: 150,
-                      ),
-                    ),
-                    SizedBox(height: 10),
                     Text(
-                      'Welcome Back!!',
+                      "Don't have an account? ",
                       style: TextStyle(
-                        fontSize: 26,
+                        fontSize: 17,
                         color: context.theme.titletext,
                       ),
                     ),
-                    SizedBox(height: 20),
-
-                    // Email Input
-                    _buildEmailField(_emailController1, 'Email'),
-                    SizedBox(height: 15),
-
-                    // Password Input
-                    _buildPasswordField(
-                      _passwordController1,
-                      'Password',
-                      _obscurePassword1,
-                      (value) {
-                        setState(() {
-                          _obscurePassword1 = value;
-                        });
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const UserSelectionPage()),
+                        );
                       },
-                    ),
-
-                    SizedBox(height: 10),
-
-                    // Forgot Password
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        GestureDetector(
-                          onTap: () {},
-                          child: Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: context.theme.primecolor,
-                              fontSize: 17,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-
-                    // Login Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: Opacity(
-                        opacity: _isLoading ? 0.3 : 1.0,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? () {} : _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: context.theme.primecolor,
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 3,
-                                  ),
-                                )
-                              : Text(
-                                  'Login',
-                                  style: TextStyle(
-                                      fontSize: 17, color: Colors.white),
-                                ),
+                      child: Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          color: context.theme.primecolor,
+                          fontSize: 17,
                         ),
                       ),
                     ),
-                    SizedBox(height: 60),
-
-                    // OR Continue with Section
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Divider(
-                            thickness: 1,
-                            color: context.theme.subtitletext,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                          child: Text(
-                            "Or continue with",
-                            style: TextStyle(
-                              color: context.theme.subtitletext,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            thickness: 1,
-                            color: context.theme.subtitletext,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 20),
-
-                    // Continue with Google Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {},
-                        icon: Image.asset(
-                          'assets/google_icon.png',
-                          height: 36,
-                        ),
-                        label: Text(
-                          'Sign in with Google',
-                          style: TextStyle(
-                            fontSize: 17,
-                            color: context.theme.titletext,
-                          ),
-                        ),
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.transparent),
-                          overlayColor: MaterialStateProperty.all(
-                              Color.fromARGB(255, 10, 54, 61)),
-                          elevation: MaterialStateProperty.all(0),
-                          side: MaterialStateProperty.all(BorderSide(
-                            color: context.theme.subtitletext,
-                          )),
-                          padding: MaterialStateProperty.all(
-                              EdgeInsets.symmetric(vertical: 8)),
-                          shape: MaterialStateProperty.all(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 70),
                   ],
                 ),
               ),
-            ),
-
-            // Sign Up
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Don't have an account? ",
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: context.theme.titletext,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const UserSelectionPage()),
-                      );
-                    },
-                    child: Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        color: context.theme.primecolor,
-                        fontSize: 17,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
