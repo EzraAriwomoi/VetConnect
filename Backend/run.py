@@ -7,7 +7,7 @@ app = create_app()
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Initialized Firebase Admin SDK
-cred = credentials.Certificate("C:\\Users\\Ariwomoi\\Documents\\App Development\\vetconnect\\Backend\\vetconnect-4da18-firebase-adminsdk-fbsvc-5d678635c3.json")
+cred = credentials.Certificate("C:\\Users\\Ariwomoi\\Documents\\App Development\\vetconnect\\Backend\\vetconnect-4da18-firebase-adminsdk-fbsvc-62a836210e.json")
 firebase_admin.initialize_app(cred)
 
 if __name__ == '__main__':
