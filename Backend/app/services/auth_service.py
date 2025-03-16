@@ -54,4 +54,4 @@ def login_user():
             'name': user.name
         }), 200
 
-    return jsonify({'message': 'Invalid email or password'}), 401
+    return jsonify({'message': 'Invalid credentials. Please try again'}), 401

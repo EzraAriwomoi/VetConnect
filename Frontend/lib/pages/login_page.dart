@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:vetconnect/components/extension/custom_theme.dart';
-import 'package:vetconnect/pages/homepage.dart';
+import 'package:vetconnect/components/controls/bottom_navigations.dart';
 import 'package:vetconnect/pages/registration/forgot_password.dart';
 import 'package:vetconnect/pages/registration/selection_page.dart';
 
@@ -22,42 +23,45 @@ class _LoginPageState extends State<LoginPage> {
   bool _isPasswordValid = true;
 
   Future<void> _login() async {
-    setState(() {
-      _isEmailValid = _emailController1.text.isNotEmpty &&
-          RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-              .hasMatch(_emailController1.text);
-      _isPasswordValid = _passwordController1.text.isNotEmpty;
-    });
+  setState(() {
+    _isEmailValid = _emailController1.text.isNotEmpty &&
+        RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+            .hasMatch(_emailController1.text);
+    _isPasswordValid = _passwordController1.text.isNotEmpty;
+  });
 
-    if (!_isEmailValid || !_isPasswordValid) {
-      return;
-    }
+  if (!_isEmailValid || !_isPasswordValid) {
+    return;
+  }
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    final response = await http.post(
-      // Uri.parse('http://10.10.113.75:5000/login'),
-      Uri.parse('http://192.168.201.58:5000/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': _emailController1.text,
-        'password': _passwordController1.text,
-      }),
-    );
+  final response = await http.post(
+    Uri.parse('http://192.168.201.58:5000/login'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'email': _emailController1.text,
+      'password': _passwordController1.text,
+    }),
+  );
 
-    final data = jsonDecode(response.body);
+  final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      String userType = data['user_type'];
+  if (response.statusCode == 200) {
+    String userType = data['user_type'];
+    
+    // Authenticate with Firebase
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController1.text,
+        password: _passwordController1.text,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            "Login successful",
-            style: TextStyle(color: Colors.white),
-          ),
+          content: Text("Login successful", style: TextStyle(color: Colors.white)),
           backgroundColor: const Color.fromARGB(255, 46, 160, 50),
           duration: Duration(seconds: 2),
         ),
@@ -68,27 +72,30 @@ class _LoginPageState extends State<LoginPage> {
       if (userType == 'animal_owner' || userType == 'veterinarian') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => BottomNavigations()),
         );
       }
-    } else {
+    } catch (firebaseError) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            data['message'],
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: const Color.fromARGB(255, 250, 109, 99),
+          content: Text("MySQL login successful, but Firebase authentication failed."),
+          backgroundColor: Colors.red,
         ),
       );
     }
-
-    setState(() {
-      _isLoading = false;
-    });
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(data['message'], style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color.fromARGB(255, 250, 109, 99),
+      ),
+    );
   }
+
+  setState(() {
+    _isLoading = false;
+  });
+}
 
   @override
   void dispose() {

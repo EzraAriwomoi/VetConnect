@@ -53,24 +53,40 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: context.theme.primecolor,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          actions: [
-            PopupMenuButton<String>(
-              onSelected: (value) {},
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem<String>(
-                    value: 'Help',
-                    child: Text('Help'),
+        backgroundColor: context.theme.primecolor,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {},
+            itemBuilder: (BuildContext context) {
+              return [
+                PopupMenuItem<String>(
+                  value: 'Help',
+                  child: Container(
+                    color: Colors.white,
+                    child: Text(
+                      'Help',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
-                ];
-              },
-              icon: Icon(Icons.more_vert, color: Colors.white),
+                  height: 30,
+                ),
+              ];
+            },
+            icon: Icon(Icons.more_vert, color: Colors.white),
+            offset: Offset(0, 40),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
-          ],
-        ),
+            constraints: BoxConstraints(
+              minWidth: 100,
+              maxHeight: 50,
+            ),
+            color: Colors.white,
+          )
+        ],
+      ),
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();

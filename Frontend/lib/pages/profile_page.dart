@@ -42,9 +42,76 @@ class _ProfilePageState extends State<ProfilePage>
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black),
-            onPressed: () {},
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'edit_profile') {
+                // Navigate to Edit Profile screen
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => EditProfileScreen()),
+                // );
+              } else if (value == 'logout') {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Logout'),
+                    content: Text('Are you sure you want to log out?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child:
+                            Text('Logout', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+              } else if (value == 'help') {}
+            },
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'edit_profile',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, color: Colors.black),
+                    SizedBox(width: 10),
+                    Text('Edit Profile'),
+                  ],
+                ),
+                height: 35,
+              ),
+              PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.red),
+                    SizedBox(width: 10),
+                    Text('Logout', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+                height: 35,
+              ),
+              PopupMenuItem<String>(
+                value: 'help',
+                child: Row(
+                  children: [
+                    Icon(Icons.help_outline, color: Colors.black),
+                    SizedBox(width: 10),
+                    Text('Help'),
+                  ],
+                ),
+                height: 35,
+              ),
+            ],
+            icon: Icon(Icons.settings, color: Colors.black),
+            offset: Offset(0, 40),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            color: Colors.white,
           ),
         ],
       ),

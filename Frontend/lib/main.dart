@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:vetconnect/components/themes/darkmode.dart';
 import 'package:vetconnect/components/themes/lightmode.dart';
 // import 'package:vetconnect/pages/guides/user_guide1.dart';
@@ -6,7 +7,9 @@ import 'package:vetconnect/pages/login_page.dart';
 // import 'package:vetconnect/pages/homepage.dart';
 // import 'components/controls/bottom_navigations.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 

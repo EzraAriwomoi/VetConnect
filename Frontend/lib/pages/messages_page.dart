@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vetconnect/pages/textarea.dart';
+import 'package:vetconnect/pages/chat_screen.dart';
 
 class MessagesPage extends StatefulWidget {
   @override
@@ -21,11 +21,89 @@ class _MessagesPageState extends State<MessagesPage> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
+  PopupMenuButton<String>(
+    onSelected: (value) {
+      if (value == 'clear_chat') {
+        // Handle clearing chat
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Clear Chat'),
+            content: Text('Are you sure you want to clear this chat?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Add logic to clear chat
+                  Navigator.of(context).pop();
+                },
+                child: Text('Clear', style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
-        ],
+        );
+      } else if (value == 'mute') {
+        // Handle muting chat notifications
+      } else if (value == 'block') {
+        // Handle blocking user
+      } else if (value == 'report') {
+        // Handle reporting user
+      }
+    },
+    itemBuilder: (BuildContext context) => [
+      PopupMenuItem<String>(
+        value: 'clear_chat',
+        child: Row(
+          children: [
+            Icon(Icons.delete, color: Colors.red),
+            SizedBox(width: 10),
+            Text('Clear Chat', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+      ),
+      PopupMenuItem<String>(
+        value: 'mute',
+        child: Row(
+          children: [
+            Icon(Icons.notifications_off, color: Colors.black),
+            SizedBox(width: 10),
+            Text('Mute Notifications'),
+          ],
+        ),
+      ),
+      PopupMenuItem<String>(
+        value: 'block',
+        child: Row(
+          children: [
+            Icon(Icons.block, color: Colors.black),
+            SizedBox(width: 10),
+            Text('Block User'),
+          ],
+        ),
+      ),
+      PopupMenuItem<String>(
+        value: 'report',
+        child: Row(
+          children: [
+            Icon(Icons.report, color: Colors.black),
+            SizedBox(width: 10),
+            Text('Report Issue'),
+          ],
+        ),
+      ),
+    ],
+    icon: Icon(Icons.more_vert, color: Colors.black), // Three-dot icon
+    offset: Offset(0, 40), // Prevents overlapping with the icon
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10), // Rounded corners
+    ),
+    color: Colors.white, // White background
+  ),
+],
+
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 10),

@@ -33,12 +33,10 @@ class _PasswordFileOwnerPageState extends State<PasswordFileOwnerPage> {
   bool _isPasswordValid = true;
 
   Future<void> registerAnimalOwner() async {
-    if (_passwordController.text.isEmpty) {
-      setState(() {
-        _isPasswordValid = false;
-      });
+    if (_passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password cannot be empty!')),
+        SnackBar(content: Text('Password fields cannot be empty!')),
       );
       return;
     }
@@ -54,53 +52,60 @@ class _PasswordFileOwnerPageState extends State<PasswordFileOwnerPage> {
       _isLoading = true;
     });
 
-    print('Password: "${_passwordController.text}"'); // Debugging
+    final Uri url =
+        Uri.parse('http://192.168.201.58:5000/register/animal_owner');
 
-    final url = Uri.parse('http://192.168.201.58:5000/register/animal_owner');
-
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "name": widget.name,
-        "email": widget.email,
-        "password": _passwordController.text,
-        "phone": widget.phone,
-        "location": widget.location,
-      }),
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (response.statusCode == 201) {
-      print('User registered successfully!');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "name": widget.name,
+          "email": widget.email,
+          "password": _passwordController.text,
+          "phone": widget.phone,
+          "location": widget.location,
+        }),
+      );
 
       if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Account created successfully!",
-            style: TextStyle(color: Colors.white),
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Account created successfully!",
+                style: TextStyle(color: Colors.white)),
+            backgroundColor: const Color.fromARGB(255, 46, 160, 50),
+            duration: Duration(seconds: 2),
           ),
-          backgroundColor: const Color.fromARGB(255, 46, 160, 50),
-          duration: Duration(seconds: 2),
-        ),
-      );
+        );
 
-      await Future.delayed(Duration(seconds: 2));
+        await Future.delayed(Duration(seconds: 2));
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );
-    } else {
-      print('Error: ${response.body}');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data['message'] ?? 'Registration failed. Try again!'),
+            backgroundColor: const Color.fromARGB(255, 250, 109, 99),
+          ),
+        );
+      }
+    } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Registration failed. Try again!'),
+          content: Text('Something went wrong. Please try again later.'),
           backgroundColor: const Color.fromARGB(255, 250, 109, 99),
         ),
       );

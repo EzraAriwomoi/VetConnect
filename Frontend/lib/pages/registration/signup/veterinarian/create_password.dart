@@ -37,6 +37,14 @@ class _CreatePasswordState extends State<CreatePassword> {
   bool _isPasswordValid = true;
 
   Future<void> registerVeterinarian() async {
+    if (_passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Password fields cannot be empty!')),
+      );
+      return;
+    }
+
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Passwords do not match!')),
@@ -44,63 +52,66 @@ class _CreatePasswordState extends State<CreatePassword> {
       return;
     }
 
-    if (!_isPasswordValid) {
-      return;
-    }
-
     setState(() {
       _isLoading = true;
-      _isPasswordValid = _passwordController.text.isNotEmpty;
     });
 
-    // final url = Uri.parse('http://10.10.113.75:5000/register/veterinarian');
-    final url = Uri.parse('http://192.168.201.58:5000/register/veterinarian');
+    final Uri url =
+        Uri.parse('http://192.168.201.58:5000/register/veterinarian');
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "name": widget.name,
-        "email": widget.email,
-        "password": _passwordController.text,
-        "license_number": widget.licenseNumber,
-        "national_id": widget.nationalID,
-        "clinic": widget.clinic,
-        "specialization": widget.specialization,
-      }),
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (response.statusCode == 201) {
-      print('Veterinarian registered successfully!');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "name": widget.name,
+          "email": widget.email,
+          "password": _passwordController.text,
+          "license_number": widget.licenseNumber,
+          "national_id": widget.nationalID,
+          "clinic": widget.clinic,
+          "specialization": widget.specialization,
+        }),
+      );
 
       if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Account created successfully!",
-            style: TextStyle(color: Colors.white),
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Account created successfully!",
+                style: TextStyle(color: Colors.white)),
+            backgroundColor: const Color.fromARGB(255, 46, 160, 50),
+            duration: Duration(seconds: 2),
           ),
-          backgroundColor: const Color.fromARGB(255, 46, 160, 50),
-          duration: Duration(seconds: 2),
-        ),
-      );
+        );
 
-      await Future.delayed(Duration(seconds: 2));
+        await Future.delayed(Duration(seconds: 2));
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );
-    } else {
-      print('Error: ${response.body}');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data['message'] ?? 'Registration failed. Try again!'),
+            backgroundColor: const Color.fromARGB(255, 250, 109, 99),
+          ),
+        );
+      }
+    } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Registration failed. Try again!'),
+          content: Text('Something went wrong. Please try again later.'),
           backgroundColor: const Color.fromARGB(255, 250, 109, 99),
         ),
       );
