@@ -1,0 +1,5 @@
+# Ignore sensitive JSON files
+*.json
+*.env
+Backend/vetconnect-4da18-firebase-adminsdk-fbsvc-5d678635c3.json
+Frontend/android/app/google-services.json
