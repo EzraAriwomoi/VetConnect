@@ -1,3 +1,4 @@
+from datetime import datetime
 from . import db
 
 class AnimalOwner(db.Model):
@@ -10,6 +11,8 @@ class AnimalOwner(db.Model):
     reset_token_expiry = db.Column(db.DateTime, nullable=True)
     firebase_uid = db.Column(db.String(255), unique=True, nullable=True)
 
+    animals = db.relationship('Animal', backref='animal_owner', lazy=True) 
+
 class Veterinarian(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -21,3 +24,14 @@ class Veterinarian(db.Model):
     specialization = db.Column(db.String(200), nullable=False)
     reset_token_expiry = db.Column(db.DateTime, nullable=True)
     firebase_uid = db.Column(db.String(255), unique=True, nullable=True)
+
+class Animal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('animal_owner.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    breed = db.Column(db.String(100), nullable=False)
+    age = db.Column(db.Integer, nullable=False)
+    species = db.Column(db.String(100), nullable=False)
+    image_url = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

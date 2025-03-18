@@ -59,10 +59,12 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController1.text,
       );
 
+      print("Logged-in Firebase User: ${FirebaseAuth.instance.currentUser?.email}");
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Login successful", style: TextStyle(color: Colors.white)),
-          backgroundColor: const Color.fromARGB(255, 46, 160, 50),
+          backgroundColor: const Color.fromARGB(255, 54, 155, 58),
           duration: Duration(seconds: 2),
         ),
       );
@@ -76,10 +78,11 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } catch (firebaseError) {
+      // MySQL login successful, but Firebase authentication failed
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("MySQL login successful, but Firebase authentication failed."),
-          backgroundColor: Colors.red,
+          content: Text("Authentication failed."),
+          backgroundColor: const Color.fromARGB(255, 250, 109, 99),
         ),
       );
     }

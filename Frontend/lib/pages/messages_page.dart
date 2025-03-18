@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vetconnect/pages/chat_screen.dart';
+import 'package:vetconnect/pages/select_vet_page.dart';
 
 class MessagesPage extends StatefulWidget {
   @override
@@ -95,12 +96,12 @@ class _MessagesPageState extends State<MessagesPage> {
         ),
       ),
     ],
-    icon: Icon(Icons.more_vert, color: Colors.black), // Three-dot icon
-    offset: Offset(0, 40), // Prevents overlapping with the icon
+    icon: Icon(Icons.more_vert, color: Colors.black),
+    offset: Offset(0, 40),
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10), // Rounded corners
+      borderRadius: BorderRadius.circular(10),
     ),
-    color: Colors.white, // White background
+    color: Colors.white,
   ),
 ],
 
@@ -132,22 +133,39 @@ class _MessagesPageState extends State<MessagesPage> {
         ],
       ),
       floatingActionButton: SizedBox(
-        height: 36,
-        child: TextButton(
-          onPressed: () {},
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.lightBlue,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(40),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+  height: 36,
+  child: TextButton(
+    onPressed: () async {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SelectVeterinarianScreen()),
+      );
+
+      if (result != null) {
+        String chatRoomId = result['chatRoomId'];
+        String vetName = result['vetName'];
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(chatRoomId: chatRoomId, vetName: vetName),
           ),
-          child: const Text(
-            "New chat",
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
+        );
+      }
+    },
+    style: TextButton.styleFrom(
+      backgroundColor: Colors.lightBlue,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(40),
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+    ),
+    child: const Text(
+      "New chat",
+      style: TextStyle(color: Colors.white),
+    ),
+  ),
+),
     );
   }
 
@@ -214,7 +232,7 @@ class _MessagesPageState extends State<MessagesPage> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ChatScreen()),
+          MaterialPageRoute(builder: (context) => ChatScreen(vetName: '', chatRoomId: '',)),
         );
       },
     );

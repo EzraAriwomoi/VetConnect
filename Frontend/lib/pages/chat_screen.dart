@@ -1,11 +1,21 @@
+import 'dart:io';
+import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
   _ChatScreenState createState() => _ChatScreenState();
+  final String chatRoomId;
+  final String vetName;
+
+  const ChatScreen(
+      {super.key, required this.vetName, required this.chatRoomId});
 }
 
 class _ChatScreenState extends State<ChatScreen> {
@@ -13,16 +23,42 @@ class _ChatScreenState extends State<ChatScreen> {
   TextEditingController _messageController = TextEditingController();
   bool _isTyping = false;
   bool _showEmojiPicker = false;
-  File? _selectedImage;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String vetName = "Loading...";
 
   @override
   void initState() {
     super.initState();
+    _fetchVetName();
     _messageFocusNode.addListener(() {
       if (_messageFocusNode.hasFocus) {
         setState(() => _showEmojiPicker = false);
       }
     });
+  }
+
+  Future<void> _fetchVetName() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            'http://192.168.201.58:5000/get_vet_name?vet_id=${widget.chatRoomId}'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          vetName = jsonDecode(response.body)['name'];
+        });
+      } else {
+        setState(() {
+          vetName = "Vet Not Found";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        vetName = "Error Fetching Name";
+      });
+    }
   }
 
   @override
@@ -32,24 +68,86 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  String formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) return "";
+
+    DateTime messageDate = timestamp.toDate();
+    DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
+    DateTime yesterday = today.subtract(Duration(days: 1));
+    DateTime lastWeek = today.subtract(Duration(days: 7));
+
+    if (messageDate.isAfter(today)) {
+      return "Today";
+    } else if (messageDate.isAfter(yesterday)) {
+      return "Yesterday";
+    } else if (messageDate.isAfter(lastWeek)) {
+      return getWeekdayName(messageDate.weekday);
+    } else {
+      return DateFormat("E, d MMM").format(messageDate);
+    }
+  }
+
+  String getWeekdayName(int weekday) {
+    const weekdays = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ];
+    return weekdays[weekday - 1];
+  }
+
+  void _sendMessage(String recipientEmail) async {
+    if (_messageController.text.trim().isEmpty) return;
+
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    String senderEmail = currentUser.email!;
+
+    await _firestore
+        .collection('chatRooms')
+        .doc(senderEmail)
+        .collection(recipientEmail)
+        .doc('messages')
+        .collection('messages')
+        .add({
+      'senderId': currentUser.uid,
+      'senderEmail': senderEmail,
+      'text': _messageController.text.trim(),
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    _messageController.clear();
+    setState(() {
+      _isTyping = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.lightBlue,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             CircleAvatar(
               backgroundImage: AssetImage('assets/user_guide1.png'),
               radius: 18,
             ),
             const SizedBox(width: 10),
-            const Text(
-              'Dr. David',
+            Text(
+              'Dr. ${vetName.split(' ')[0]}',
               style: TextStyle(fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(width: 5),
-            const Icon(Icons.verified, color: Colors.blue, size: 16),
+            const Icon(Icons.verified, color: Colors.black, size: 16),
           ],
         ),
         actions: [
@@ -59,9 +157,7 @@ class _ChatScreenState extends State<ChatScreen> {
             onSelected: (value) {
               if (value == 'view_contact') {
               } else if (value == 'search') {
-                // Handle searching messages
               } else if (value == 'clear_chat') {
-                // Show confirmation before clearing chat
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -74,8 +170,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       TextButton(
                         onPressed: () {},
-                        child:
-                            Text('Clear', style: TextStyle(color: Colors.red)),
+                        child: Text('Clear',
+                            style: TextStyle(
+                              color: const Color.fromARGB(255, 250, 109, 99),
+                            )),
                       ),
                     ],
                   ),
@@ -108,9 +206,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 value: 'clear_chat',
                 child: Row(
                   children: [
-                    Icon(Icons.delete, color: Colors.red),
+                    Icon(
+                      Icons.delete,
+                      color: const Color.fromARGB(255, 250, 109, 99),
+                    ),
                     SizedBox(width: 10),
-                    Text('Clear Chat', style: TextStyle(color: Colors.red)),
+                    Text('Clear Chat',
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 250, 109, 99),
+                        )),
                   ],
                 ),
               ),
@@ -147,16 +251,58 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(10),
+            child: Column(
               children: [
+                const SizedBox(height: 15),
                 _buildWelcomeMessage(),
                 const SizedBox(height: 10),
-                _buildDateLabel("Today"),
-                const SizedBox(height: 10),
-                _buildSentMessage("11:43", "Thank you for reaching out!"),
-                _buildReceivedMessage("11:40", "Sure, I'll check that out."),
-                if (_selectedImage != null) _buildImagePreview(_selectedImage!),
+                Expanded(
+                    child: StreamBuilder(
+                  stream: _firestore
+                      .collection('chatRooms')
+                      .doc(_auth.currentUser?.email)
+                      .collection(widget.chatRoomId)
+                      .doc('messages')
+                      .collection('messages')
+                      .orderBy('timestamp', descending: true)
+                      .snapshots(),
+                  builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (!snapshot.hasData) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    var messages = snapshot.data!.docs;
+                    return ListView.builder(
+                      reverse: true,
+                      padding: const EdgeInsets.all(10),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        var message = messages[index];
+                        bool isSentByMe =
+                            message['senderId'] == _auth.currentUser?.uid;
+
+                        Timestamp? timestamp =
+                            message['timestamp'] as Timestamp?;
+                        String formattedDate = formatTimestamp(timestamp);
+
+                        bool showDateLabel = index == messages.length - 1 ||
+                            (index < messages.length - 1 &&
+                                formatTimestamp(messages[index + 1]['timestamp']
+                                        as Timestamp?) !=
+                                    formattedDate);
+
+                        return Column(
+                          children: [
+                            if (showDateLabel) _buildDateLabel(formattedDate),
+                            isSentByMe
+                                ? _buildSentMessage("", message['text'])
+                                : _buildReceivedMessage("", message['text'],
+                                    message['senderEmail'] ?? "Unknown Sender"),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                )),
               ],
             ),
           ),
@@ -222,7 +368,8 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildReceivedMessage(String time, String message) {
+  Widget _buildReceivedMessage(
+      String time, String message, String senderEmail) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -235,6 +382,12 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(senderEmail,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue)),
+            SizedBox(height: 5),
             Text(message, style: TextStyle(fontSize: 16)),
             SizedBox(height: 5),
             Text(time, style: TextStyle(fontSize: 12, color: Colors.grey)),
@@ -315,7 +468,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: IconButton(
               icon: Icon(_isTyping ? Icons.send : Icons.mic,
                   color: Colors.lightBlue),
-              onPressed: _isTyping ? _sendMessage : null,
+              onPressed: _isTyping ? () => _sendMessage(widget.chatRoomId) : null,
             ),
           ),
         ],
@@ -335,24 +488,17 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _sendMessage() {
-    print("Message Sent: ${_messageController.text}");
-    _messageController.clear();
-    setState(() => _isTyping = false);
-  }
-
   void _pickImageFromGallery() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() => _selectedImage = File(pickedFile.path));
     }
   }
 
-  Widget _buildImagePreview(File image) {
-    return Container(
-      margin: EdgeInsets.all(10),
-      child: Image.file(image, height: 150),
-    );
-  }
+  // Widget _buildImagePreview(File image) {
+  //   return Container(
+  //     margin: EdgeInsets.all(10),
+  //     child: Image.file(image, height: 150),
+  //   );
+  // }
 }
