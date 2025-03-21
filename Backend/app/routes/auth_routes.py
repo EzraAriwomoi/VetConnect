@@ -8,6 +8,8 @@ from app.services.auth_service import register_user, login_user
 from app import db
 import secrets
 import mysql.connector
+import cloudinary
+import cloudinary.uploader
 
 auth_bp = Blueprint('auth_bp', __name__)
 CORS(auth_bp)
@@ -19,6 +21,14 @@ def get_mysql_connection():
         password="arish",
         database="vetconnect_db"
     )
+
+# Cloudinary Configuration
+cloudinary.config(
+    cloud_name="dhlrkwvoz",
+    api_key="622252338293132",
+    api_secret="sLoZrrBF3BQ6WJGwYV2YbXg6d38"
+)
+
 
 @auth_bp.route('/register/animal_owner', methods=['POST', 'OPTIONS'])
 def register_animal_owner():
@@ -41,6 +51,7 @@ def register_animal_owner():
 
     return response, status_code
 
+
 @auth_bp.route('/register/veterinarian', methods=['POST', 'OPTIONS'])
 def register_veterinarian():
     if request.method == 'OPTIONS':
@@ -62,6 +73,7 @@ def register_veterinarian():
 
     return response, status_code
 
+
 @auth_bp.route('/get_veterinarians', methods=['GET'])
 def get_veterinarians():
     try:
@@ -79,6 +91,7 @@ def get_veterinarians():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @auth_bp.route('/get_vet_name', methods=['GET'])
 def get_vet_name():
@@ -110,6 +123,37 @@ def _build_cors_preflight_response():
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     return response
 
+
+@auth_bp.route('/get_user', methods=['GET'])
+def get_user():
+    email = request.args.get('email')
+
+    if not email:
+        return jsonify({"error": "Missing email parameter"}), 400
+
+    connection = get_mysql_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    # Check if the email belongs to an animal owner
+    cursor.execute("SELECT id, name FROM animal_owner WHERE email = %s", (email,))
+    user = cursor.fetchone()
+
+    # If not found in AnimalOwner, check Veterinarian table
+    if not user:
+        cursor.execute("SELECT id, name FROM Veterinarian WHERE email = %s", (email,))
+        user = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    if user:
+        print(f"User fetched for email {email}: {user}")  # Debugging line
+        return jsonify(user), 200
+    else:
+        print(f"User not found for email: {email}")  # Debugging line
+        return jsonify({"error": "User not found"}), 404
+
+
 @auth_bp.route('/forgot_password', methods=['POST'])
 def forgot_password():
     data = request.get_json()
@@ -128,6 +172,7 @@ def forgot_password():
     except Exception as e:
         print(f"Error sending Firebase password reset email: {e}")
     return jsonify({"message": "Password reset link sent! Check your email."}), 200
+
 
 @auth_bp.route('/reset_password', methods=['POST'])
 def reset_password():
@@ -154,23 +199,27 @@ def reset_password():
         print(f"Error updating Firebase password: {e}")
     return jsonify({"message": "Password reset successful!"}), 200
 
+
 @auth_bp.route('/register_animal', methods=['POST'])
 def register_animal():
     data = request.json
     owner_id = data.get('owner_id')
     name = data.get('name')
     breed = data.get('breed')
-    age = data.get('age')
     species = data.get('species')
+    gender = data.get('gender')
+    color = data.get('color')
+    date_of_birth_str = data.get('date_of_birth')
     image_url = data.get('image_url', '')
 
-    # Check for missing required fields
-    if not owner_id or not name or not species or age is None:
+    # Check required fields
+    if not owner_id or not name or not species or not gender or not color or not date_of_birth_str:
         return jsonify({"message": "Missing required fields", "success": False}), 400
 
-    # Validate age
-    if not isinstance(age, int) or age < 0:
-        return jsonify({"message": "Invalid age value", "success": False}), 400
+    try:
+        date_of_birth = datetime.strptime(date_of_birth_str, "%Y-%m-%d")
+    except ValueError:
+        return jsonify({"message": "Invalid date format. Use YYYY-MM-DD.", "success": False}), 400
 
     # Ensure the owner exists
     owner = AnimalOwner.query.get(owner_id)
@@ -178,7 +227,16 @@ def register_animal():
         return jsonify({"message": "Owner not found", "success": False}), 404
 
     try:
-        new_animal = Animal(owner_id=owner_id, name=name, breed=breed, age=age, species=species, image_url=image_url)
+        new_animal = Animal(
+            owner_id=owner_id,
+            name=name,
+            breed=breed,
+            species=species,
+            gender=gender,
+            color=color,
+            date_of_birth=date_of_birth,
+            image_url=image_url
+        )
         db.session.add(new_animal)
         db.session.commit()
         
@@ -187,21 +245,51 @@ def register_animal():
         db.session.rollback()
         return jsonify({"message": "An error occurred", "error": str(e), "success": False}), 500
 
+
+@auth_bp.route('/upload_image', methods=['POST'])
+def upload_image():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image uploaded"}), 400
+
+    image = request.files['image']
+    
+    try:
+        upload_result = cloudinary.uploader.upload(image)
+        image_url = upload_result["secure_url"]
+        return jsonify({"image_url": image_url}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @auth_bp.route('/get_animals', methods=['GET'])
 def get_animals():
     owner_id = request.args.get('owner_id', type=int)
     if owner_id is None:
         return jsonify({"error": "Missing owner_id"}), 400
 
+    def calculate_age(dob):
+        today = datetime.today()
+        age_years = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        age_months = (today.year - dob.year) * 12 + today.month - dob.month
+
+        if age_years < 1:
+            return f"{age_months} months"
+        else:
+            return f"{age_years} years"
+
     animals = Animal.query.filter_by(owner_id=owner_id).all()
+    
     return jsonify([{
         "id": animal.id,
         "name": animal.name,
         "breed": animal.breed,
-        "age": animal.age,
+        "age": calculate_age(animal.date_of_birth) if animal.date_of_birth else "Unknown",
         "species": animal.species,
+        "gender": animal.gender,
+        "color": animal.color,
         "image_url": animal.image_url
     } for animal in animals]), 200
+
 
 @auth_bp.route('/update_animal/<int:animal_id>', methods=['PUT'])
 def update_animal(animal_id):
@@ -211,14 +299,27 @@ def update_animal(animal_id):
     if not animal:
         return jsonify({"error": "Animal not found"}), 404
 
-    animal.name = data.get('name', animal.name)
-    animal.breed = data.get('breed', animal.breed)
-    animal.age = data.get('age', animal.age)
-    animal.species = data.get('species', animal.species)
-    animal.image_url = data.get('image_url', animal.image_url)
+    date_of_birth_str = data.get("date_of_birth")
+    if date_of_birth_str:
+        try:
+            animal.date_of_birth = datetime.strptime(date_of_birth_str, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
 
-    db.session.commit()
-    return jsonify({"message": "Animal updated successfully"}), 200
+    animal.name = data.get("name", animal.name)
+    animal.breed = data.get("breed", animal.breed)
+    animal.species = data.get("species", animal.species)
+    animal.gender = data.get("gender", animal.gender)
+    animal.color = data.get("color", animal.color)
+    animal.image_url = data.get("image_url", animal.image_url)
+
+    try:
+        db.session.commit()
+        return jsonify({"message": "Animal updated successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 
 @auth_bp.route('/delete_animal/<int:animal_id>', methods=['DELETE'])
 def delete_animal(animal_id):
