@@ -21,84 +21,106 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   bool _isEmailValid = true;
   bool _isPasswordValid = true;
+  int? loggedInUserId;
 
   Future<void> _login() async {
-  setState(() {
-    _isEmailValid = _emailController1.text.isNotEmpty &&
-        RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-            .hasMatch(_emailController1.text);
-    _isPasswordValid = _passwordController1.text.isNotEmpty;
-  });
+    setState(() {
+      _isEmailValid = _emailController1.text.isNotEmpty &&
+          RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+              .hasMatch(_emailController1.text);
+      _isPasswordValid = _passwordController1.text.isNotEmpty;
+    });
 
-  if (!_isEmailValid || !_isPasswordValid) {
-    return;
-  }
-
-  setState(() {
-    _isLoading = true;
-  });
-
-  final response = await http.post(
-    Uri.parse('http://192.168.201.58:5000/login'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'email': _emailController1.text,
-      'password': _passwordController1.text,
-    }),
-  );
-
-  final data = jsonDecode(response.body);
-
-  if (response.statusCode == 200) {
-    String userType = data['user_type'];
-    
-    // Authenticate with Firebase
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController1.text,
-        password: _passwordController1.text,
-      );
-
-      print("Logged-in Firebase User: ${FirebaseAuth.instance.currentUser?.email}");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Login successful", style: TextStyle(color: Colors.white)),
-          backgroundColor: const Color.fromARGB(255, 54, 155, 58),
-          duration: Duration(seconds: 2),
-        ),
-      );
-
-      await Future.delayed(Duration(seconds: 2));
-
-      if (userType == 'animal_owner' || userType == 'veterinarian') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => BottomNavigations()),
-        );
-      }
-    } catch (firebaseError) {
-      // MySQL login successful, but Firebase authentication failed
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Authentication failed."),
-          backgroundColor: const Color.fromARGB(255, 250, 109, 99),
-        ),
-      );
+    if (!_isEmailValid || !_isPasswordValid) {
+      return;
     }
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(data['message'], style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color.fromARGB(255, 250, 109, 99),
-      ),
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final response = await http.post(
+      Uri.parse('http://192.168.201.58:5000/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': _emailController1.text,
+        'password': _passwordController1.text,
+      }),
     );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      String userType = data['user_type'];
+      await fetchUserId(_emailController1.text);
+
+      if (loggedInUserId == null) {
+        print("Fetch user ID failed! Cannot proceed.");
+        return;
+      }
+
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController1.text,
+          password: _passwordController1.text,
+        );
+
+        print(
+            "Logged-in Firebase User: ${FirebaseAuth.instance.currentUser?.email}");
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text("Login successful", style: TextStyle(color: Colors.white)),
+            backgroundColor: const Color.fromARGB(255, 54, 155, 58),
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        await Future.delayed(Duration(seconds: 2));
+
+        if (userType == 'animal_owner' || userType == 'veterinarian') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => BottomNavigations()),
+          );
+        }
+      } catch (firebaseError) {
+        print("Firebase Authentication Error: $firebaseError");
+      }
+    } else {
+      print("MySQL login failed: ${data['message']}");
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
-  setState(() {
-    _isLoading = false;
-  });
-}
+  Future<void> fetchUserId(String email) async {
+    print("Fetching user ID for: $email");
+
+    final response = await http.get(
+      Uri.parse('http://192.168.201.58:5000/get_user?email=$email'),
+    );
+
+    print("Response from get_user: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final userData = jsonDecode(response.body);
+
+      if (userData.containsKey("id")) {
+        setState(() {
+          loggedInUserId = userData["id"];
+        });
+        print("User ID set: $loggedInUserId");
+      } else {
+        print("User ID missing in response");
+      }
+    } else {
+      print("Error fetching user ID: ${response.body}");
+    }
+  }
 
   @override
   void dispose() {
@@ -110,9 +132,9 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-    onTap: () {
-      FocusScope.of(context).unfocus();
-    },
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
       child: Scaffold(
         body: SafeArea(
           child: Column(
@@ -140,11 +162,11 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       SizedBox(height: 20),
-      
+
                       // Email Input
                       _buildEmailField(_emailController1, 'Email'),
                       SizedBox(height: 15),
-      
+
                       // Password Input
                       _buildPasswordField(
                         _passwordController1,
@@ -156,9 +178,9 @@ class _LoginPageState extends State<LoginPage> {
                           });
                         },
                       ),
-      
+
                       SizedBox(height: 10),
-      
+
                       // Forgot Password
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -182,7 +204,7 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       ),
                       SizedBox(height: 20),
-      
+
                       // Login Button
                       SizedBox(
                         width: double.infinity,
@@ -215,7 +237,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       SizedBox(height: 60),
-      
+
                       // OR Continue with Section
                       Row(
                         children: [
@@ -226,7 +248,8 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 10.0),
                             child: Text(
                               "Or continue with",
                               style: TextStyle(
@@ -243,9 +266,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ],
                       ),
-      
+
                       SizedBox(height: 20),
-      
+
                       // Continue with Google Button
                       SizedBox(
                         width: double.infinity,
@@ -286,7 +309,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-      
+
               // Sign Up
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20.0),

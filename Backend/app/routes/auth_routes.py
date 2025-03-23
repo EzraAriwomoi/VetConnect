@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 import bcrypt
 from firebase_admin import auth
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, url_for
 from flask_cors import CORS
-from app.models import Animal, AnimalOwner, Veterinarian
+from app.models import Animal, AnimalOwner, FavoriteVeterinarian, Veterinarian
 from app.services.auth_service import register_user, login_user
 from app import db
 import secrets
@@ -331,3 +331,128 @@ def delete_animal(animal_id):
     db.session.delete(animal)
     db.session.commit()
     return jsonify({"message": "Animal deleted successfully"}), 200
+
+
+@auth_bp.route('/veterinarians', methods=['GET'])
+def get_all_veterinarians():
+    veterinarians = Veterinarian.query.all()
+    vet_list = []
+    
+    for vet in veterinarians:
+        profile_image = vet.profile_image
+        # if not profile_image:
+        #     profile_image = url_for('static', filename='user_guide1.png', _external=True)
+
+        vet_list.append({
+            "id": vet.id,
+            "name": vet.name,
+            "clinic": vet.clinic,
+            "profile_image": profile_image
+        })
+
+    return jsonify({"veterinarians": vet_list})
+
+
+@auth_bp.route('/add_favorite', methods=['POST'])
+def add_favorite():
+    try:
+        data = request.get_json()
+        owner_id = data.get('owner_id')
+        veterinarian_id = data.get('veterinarian_id')
+
+        if not owner_id or not veterinarian_id:
+            return jsonify({"error": "Missing owner_id or veterinarian_id"}), 400
+
+        connection = get_mysql_connection()
+        cursor = connection.cursor()
+
+        # Check if the veterinarian is already favorited
+        cursor.execute(
+            "SELECT * FROM favorite_veterinarian WHERE owner_id = %s AND veterinarian_id = %s",
+            (owner_id, veterinarian_id),
+        )
+        existing_fav = cursor.fetchone()
+
+        if existing_fav:
+            return jsonify({"message": "Already bookmarked"}), 409
+
+        cursor.execute(
+            "INSERT INTO favorite_veterinarian (owner_id, veterinarian_id) VALUES (%s, %s)",
+            (owner_id, veterinarian_id),
+        )
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({"message": "Veterinarian bookmarked successfully"}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+@auth_bp.route('/remove_favorite', methods=['DELETE'])
+def remove_favorite():
+    try:
+        data = request.get_json()
+        owner_id = data.get("owner_id")
+        veterinarian_id = data.get("veterinarian_id")
+
+        if not owner_id or not veterinarian_id:
+            return jsonify({"error": "Missing owner_id or veterinarian_id"}), 400
+
+        connection = get_mysql_connection()
+        cursor = connection.cursor()
+
+        # Check if the favorite exists
+        cursor.execute(
+            "SELECT * FROM favorite_veterinarian WHERE owner_id = %s AND veterinarian_id = %s",
+            (owner_id, veterinarian_id)
+        )
+        favorite = cursor.fetchone()
+
+        if not favorite:
+            cursor.close()
+            connection.close()
+            return jsonify({"error": "Favorite not found"}), 404
+
+        # Delete the favorite record
+        cursor.execute(
+            "DELETE FROM favorite_veterinarian WHERE owner_id = %s AND veterinarian_id = %s",
+            (owner_id, veterinarian_id)
+        )
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({"message": "Favorite removed successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+@auth_bp.route('/get_favorites', methods=['GET'])
+def get_favorites():
+    owner_id = request.args.get('owner_id', type=int)
+    if not owner_id:
+        return jsonify({"error": "Missing owner_id"}), 400
+
+    connection = get_mysql_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """
+    SELECT v.id, v.name, v.clinic, v.profile_image
+    FROM favorite_veterinarian fv
+    JOIN veterinarian v ON fv.veterinarian_id = v.id
+    WHERE fv.owner_id = %s
+    """
+    cursor.execute(query, (owner_id,))
+    favorites = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(favorites), 200
+

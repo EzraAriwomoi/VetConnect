@@ -1,0 +1,2 @@
+C:/Users/Ariwomoi/Documents/App Development/vetconnect/Frontend/android/app/.cxx/Debug/5t72362y/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/Ariwomoi/Documents/App Development/vetconnect/Frontend/android/app/.cxx/Debug/5t72362y/armeabi-v7a/CMakeFiles/rebuild_cache.dir

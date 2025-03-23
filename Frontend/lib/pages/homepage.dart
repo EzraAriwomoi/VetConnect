@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:vetconnect/pages/doc_profile.dart';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   @override
@@ -12,33 +15,166 @@ class _HomePageState extends State<HomePage> {
   ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
   bool _showAppBarTitle = false;
+  List<Map<String, dynamic>> veterinarians = [];
+  bool isLoading = true;
+  int? loggedInUserId;
+  List<Map<String, dynamic>> favoriteVeterinarians = [];
 
-  List<Map<String, String>> veterinarians = [
-    {
-      "name": "Dr. David",
-      "clinicName": "Paws Care",
-      "imagePath": "assets/user_guide1.png"
-    },
-    {
-      "name": "Dr. Emily",
-      "clinicName": "Healthy Pets",
-      "imagePath": "assets/user_guide1.png"
-    },
-    {
-      "name": "Dr. David",
-      "clinicName": "Paws Care",
-      "imagePath": "assets/user_guide1.png"
-    },
-    {
-      "name": "Dr. Emily",
-      "clinicName": "Healthy Pets",
-      "imagePath": "assets/user_guide1.png"
-    },
-  ];
+  Future<void> fetchVeterinarians() async {
+    try {
+      final response =
+          await http.get(Uri.parse('http://192.168.201.58:5000/veterinarians'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          veterinarians = List<Map<String, dynamic>>.from(
+            data['veterinarians'].map((vet) => {
+                  "id": vet["id"] ?? 0,
+                  "name": vet["name"],
+                  "clinicName": vet["clinic"],
+                  "imagePath": vet["profile_image"] ?? "assets/user_guide1.png"
+                }),
+          );
+          isLoading = false;
+        });
+      } else {
+        throw Exception("Failed to load veterinarians");
+      }
+    } catch (e) {
+      print("Error fetching veterinarians: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> fetchUserId(String email) async {
+    print("Fetching user ID for: $email");
+
+    final response = await http.get(
+      Uri.parse('http://192.168.201.58:5000/get_user?email=$email'),
+    );
+
+    print("Response from get_user: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final userData = jsonDecode(response.body);
+
+      if (userData.containsKey("id")) {
+        setState(() {
+          loggedInUserId = userData["id"];
+        });
+        print("User ID set: $loggedInUserId");
+      } else {
+        print("User ID missing in response");
+      }
+    } else {
+      print("Error fetching user ID: ${response.body}");
+    }
+  }
+
+  Future<void> bookmarkVeterinarian(int vetId) async {
+    print("Bookmarking Vet ID: $vetId");
+
+    if (loggedInUserId == null) {
+      print("User ID is null. Fetching again...");
+      await fetchUserId(FirebaseAuth.instance.currentUser?.email ?? "");
+
+      if (loggedInUserId == null) {
+        print("Still no user ID. Cannot bookmark.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Please log in first!"),
+            backgroundColor: const Color.fromARGB(255, 250, 109, 99),
+          ),
+        );
+        return;
+      }
+    }
+
+    print("Attempting to bookmark vet $vetId for user $loggedInUserId");
+
+    final response = await http.post(
+      Uri.parse('http://192.168.201.58:5000/add_favorite'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"owner_id": loggedInUserId, "veterinarian_id": vetId}),
+    );
+
+    if (response.statusCode == 201) {
+      print("Veterinarian bookmarked successfully");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Veterinarian added to favorites!"),
+          backgroundColor: const Color.fromARGB(255, 54, 155, 58),
+        ),
+      );
+    } else {
+      print("Error bookmarking veterinarian: ${response.body}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to add favorite"),
+          backgroundColor: const Color.fromARGB(255, 250, 109, 99),
+        ),
+      );
+    }
+  }
+
+  Future<void> removeFavorite(int vetId) async {
+    if (loggedInUserId == null) return;
+
+    final response = await http.delete(
+      Uri.parse('http://192.168.201.58:5000/remove_favorite'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "owner_id": loggedInUserId,
+        "veterinarian_id": vetId,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print("Favorite removed successfully");
+      setState(() {
+        favoriteVeterinarians.removeWhere((vet) => vet["id"] == vetId);
+      });
+    } else {
+      print("Error removing favorite: ${response.body}");
+    }
+  }
+
+  Future<void> fetchFavorites(int ownerId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.201.58:5000/get_favorites?owner_id=$ownerId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("Raw Favorites Response: $data");
+
+        setState(() {
+          favoriteVeterinarians = List<Map<String, dynamic>>.from(data);
+        });
+
+        print("Updated favorite list: $favoriteVeterinarians");
+      } else {
+        throw Exception("Failed to load favorites");
+      }
+    } catch (e) {
+      print("Error fetching favorites: $e");
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    fetchVeterinarians();
+    fetchUserId(FirebaseAuth.instance.currentUser?.email ?? "").then((_) {
+      if (loggedInUserId != null) {
+        fetchFavorites(loggedInUserId!);
+      }
+    });
+
     Future.delayed(Duration(seconds: 3), _autoSlide);
     _scrollController.addListener(() {
       setState(() {
@@ -274,7 +410,8 @@ class _HomePageState extends State<HomePage> {
                             );
                           },
                           child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 4),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
@@ -288,18 +425,34 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(6),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
-                                    child: Image.asset(
-                                      vet["imagePath"]!,
-                                      width: 75,
-                                      height: 75,
-                                      fit: BoxFit.cover,
-                                    ),
+                                    child: vet["imagePath"] != null &&
+                                            vet["imagePath"]!.startsWith("http")
+                                        ? Image.network(
+                                            vet["imagePath"]!,
+                                            width: 75,
+                                            height: 75,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                              return Image.asset(
+                                                  'assets/user_guide1.png',
+                                                  width: 75,
+                                                  height: 75,
+                                                  fit: BoxFit.cover);
+                                            },
+                                          )
+                                        : Image.asset(
+                                            'assets/user_guide1.png',
+                                            width: 75,
+                                            height: 75,
+                                            fit: BoxFit.cover,
+                                          ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
@@ -308,6 +461,7 @@ class _HomePageState extends State<HomePage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
                                               vet["name"]!,
@@ -315,6 +469,7 @@ class _HomePageState extends State<HomePage> {
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
                                               ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(width: 5),
                                             Icon(
@@ -330,16 +485,45 @@ class _HomePageState extends State<HomePage> {
                                             fontSize: 14,
                                             color: Colors.grey[600],
                                           ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
                                   ),
                                   Row(
                                     children: [
-                                      Icon(
-                                        Icons.bookmark_border_outlined,
-                                        color: Colors.black,
-                                        size: 30,
+                                      StatefulBuilder(
+                                        builder: (context, setStateIcon) {
+                                          bool isBookmarked =
+                                              favoriteVeterinarians.any((fav) =>
+                                                  fav["id"] == vet["id"]);
+
+                                          return IconButton(
+                                            icon: Icon(
+                                              isBookmarked
+                                                  ? Icons.bookmark
+                                                  : Icons
+                                                      .bookmark_border_outlined,
+                                              color: isBookmarked
+                                                  ? Colors.black
+                                                  : Colors.grey,
+                                              size: 30,
+                                            ),
+                                            onPressed: () async {
+                                              if (isBookmarked) {
+                                                await removeFavorite(vet["id"]);
+                                              } else {
+                                                await bookmarkVeterinarian(
+                                                    vet["id"]);
+                                              }
+                                              await fetchFavorites(
+                                                  loggedInUserId!);
+
+                                              setStateIcon(() {});
+                                              setState(() {});
+                                            },
+                                          );
+                                        },
                                       ),
                                       const SizedBox(width: 20),
                                       Container(

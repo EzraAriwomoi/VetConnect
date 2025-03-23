@@ -22,6 +22,7 @@ class Veterinarian(db.Model):
     national_id = db.Column(db.String(50), unique=True, nullable=False)
     clinic = db.Column(db.String(200), nullable=False)
     specialization = db.Column(db.String(200), nullable=False)
+    profile_image = db.Column(db.String(300), nullable=True)
     reset_token_expiry = db.Column(db.DateTime, nullable=True)
     firebase_uid = db.Column(db.String(255), unique=True, nullable=True)
 
@@ -37,3 +38,11 @@ class Animal(db.Model):
     image_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class FavoriteVeterinarian(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('animal_owner.id'), nullable=False)
+    veterinarian_id = db.Column(db.Integer, db.ForeignKey('veterinarian.id'), nullable=False)
+
+    owner = db.relationship('AnimalOwner', backref='favorite_veterinarians')
+    veterinarian = db.relationship('Veterinarian', backref='favorited_by')
