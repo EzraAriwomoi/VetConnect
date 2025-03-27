@@ -22,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isEmailValid = true;
   bool _isPasswordValid = true;
   int? loggedInUserId;
+  String? loggedInUserType;
 
   Future<void> _login() async {
     setState(() {
@@ -82,7 +83,9 @@ class _LoginPageState extends State<LoginPage> {
         if (userType == 'animal_owner' || userType == 'veterinarian') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => BottomNavigations()),
+            MaterialPageRoute(
+              builder: (context) => BottomNavigations(userType: userType),
+            ),
           );
         }
       } catch (firebaseError) {
@@ -112,8 +115,9 @@ class _LoginPageState extends State<LoginPage> {
       if (userData.containsKey("id")) {
         setState(() {
           loggedInUserId = userData["id"];
+          loggedInUserType = userData["user_type"];
         });
-        print("User ID set: $loggedInUserId");
+        print("User ID: $loggedInUserId, User Type: $loggedInUserType");
       } else {
         print("User ID missing in response");
       }
@@ -185,8 +189,8 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          GestureDetector(
-                            onTap: () {
+                          TextButton(
+                            onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -323,8 +327,8 @@ class _LoginPageState extends State<LoginPage> {
                         color: context.theme.titletext,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
+                    TextButton(
+                      onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(

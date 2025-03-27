@@ -8,9 +8,9 @@ import 'package:intl/intl.dart';
 import 'package:vetconnect/pages/animal_details_page.dart';
 import 'package:vetconnect/pages/doc_profile.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePageOwner extends StatefulWidget {
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  _ProfilePageOwnerState createState() => _ProfilePageOwnerState();
 }
 
 class AddAnimalDialog extends StatefulWidget {
@@ -310,7 +310,7 @@ class _AddAnimalDialogState extends State<AddAnimalDialog> {
   }
 }
 
-class _ProfilePageState extends State<ProfilePage>
+class _ProfilePageOwnerState extends State<ProfilePageOwner>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Map<String, dynamic>> _registeredAnimals = [];
@@ -318,10 +318,12 @@ class _ProfilePageState extends State<ProfilePage>
   List<Map<String, dynamic>> favoriteVeterinarians = [];
   bool isLoading = true;
   bool isFetchingUser = true;
+  String ownerName = "Owner";
 
   @override
   void initState() {
     super.initState();
+    fetchAnimalsForCurrentUser();
     _tabController = TabController(length: 2, vsync: this);
     fetchUserId(FirebaseAuth.instance.currentUser?.email ?? "").then((_) {
       if (loggedInUserId != null) {
@@ -347,6 +349,7 @@ class _ProfilePageState extends State<ProfilePage>
       if (userData.containsKey("id")) {
         setState(() {
           loggedInUserId = userData["id"];
+          ownerName = userData['name'];
         });
         print("User ID set: $loggedInUserId");
       } else {
@@ -377,7 +380,8 @@ class _ProfilePageState extends State<ProfilePage>
                 : int.tryParse(vet["id"].toString()) ?? 0,
             "name": vet["name"] ?? "Unknown Vet",
             "clinic": vet["clinic"] ?? "Unknown Clinic",
-            "profile_image": vet["profile_image"] ?? "assets/user_guide1.png",
+            "profile_image":
+                vet["profile_image"] ?? "assets/default_profile.png",
           };
         }).toList();
       } else {
@@ -425,7 +429,6 @@ class _ProfilePageState extends State<ProfilePage>
     super.dispose();
   }
 
-  String name = "Ezra Ariwomoi";
   String role = "Animal Owner";
 
   Future<void> registerAnimal(
@@ -594,7 +597,8 @@ class _ProfilePageState extends State<ProfilePage>
                 height: 35,
               ),
             ],
-            icon: Icon(Icons.settings, color: Colors.black),
+            icon: const Icon(Icons.settings, color: Colors.black,),
+            tooltip: 'Settings',
             offset: Offset(0, 40),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -618,7 +622,7 @@ class _ProfilePageState extends State<ProfilePage>
               children: [
                 CircleAvatar(
                   radius: 60,
-                  backgroundImage: AssetImage('assets/user_guide1.png'),
+                  backgroundImage: AssetImage('assets/default_profile.png'),
                   child: Align(
                     alignment: Alignment.bottomRight,
                     child: GestureDetector(
@@ -636,7 +640,7 @@ class _ProfilePageState extends State<ProfilePage>
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  name,
+                  ownerName,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -848,7 +852,10 @@ class _ProfilePageState extends State<ProfilePage>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AnimalDetailsPage(animal: animal),
+                        builder: (context) => AnimalDetailsPage(
+                          animal: animal,
+                          animalId: animal['id'],
+                        ),
                       ),
                     );
                   },
@@ -923,8 +930,10 @@ class _ProfilePageState extends State<ProfilePage>
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        AnimalDetailsPage(animal: animal),
+                                    builder: (context) => AnimalDetailsPage(
+                                      animal: animal,
+                                      animalId: animal['id'],
+                                    ),
                                   ),
                                 );
                               },
@@ -1061,10 +1070,11 @@ class _ProfilePageState extends State<ProfilePage>
                         context,
                         MaterialPageRoute(
                           builder: (context) => DoctorProfilePage(
+                            vetId: vet["id"],
                             name: vet["name"],
                             clinicName: vet["clinic"],
                             imagePath: vet["profile_image"] ??
-                                "assets/user_guide1.png",
+                                "assets/default_profile.png",
                           ),
                         ),
                       );
@@ -1104,14 +1114,14 @@ class _ProfilePageState extends State<ProfilePage>
                                           errorBuilder:
                                               (context, error, stackTrace) {
                                             return Image.asset(
-                                                'assets/user_guide1.png',
+                                                'assets/default_profile.png',
                                                 width: 75,
                                                 height: 75,
                                                 fit: BoxFit.cover);
                                           },
                                         )
                                       : Image.asset(
-                                          'assets/user_guide1.png',
+                                          'assets/default_profile.png',
                                           width: 75,
                                           height: 75,
                                           fit: BoxFit.cover,
@@ -1198,10 +1208,11 @@ class _ProfilePageState extends State<ProfilePage>
                                         MaterialPageRoute(
                                           builder: (context) =>
                                               DoctorProfilePage(
+                                            vetId: vet["id"],
                                             name: vet["name"],
                                             clinicName: vet["clinic"],
                                             imagePath: vet["profile_image"] ??
-                                                "assets/user_guide1.png",
+                                                "assets/default_profile.png",
                                           ),
                                         ),
                                       );

@@ -97,6 +97,7 @@ class _MessagesPageState extends State<MessagesPage> {
       ),
     ],
     icon: Icon(Icons.more_vert, color: Colors.black),
+    tooltip: 'Menu',
     offset: Offset(0, 40),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(10),

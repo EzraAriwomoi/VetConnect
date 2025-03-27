@@ -45,6 +45,9 @@ dependencies:
   intl: ^0.20.2
   firebase_storage: ^12.4.4
   url_launcher: ^6.3.1
+  flutter_svg: ^2.0.17
+  timeline_tile: ^2.0.0
+  fl_chart: ^0.70.2
 
 dev_dependencies:
   flutter_test:

@@ -19,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   bool isLoading = true;
   int? loggedInUserId;
   List<Map<String, dynamic>> favoriteVeterinarians = [];
+  String? loggedInUserName;
 
   Future<void> fetchVeterinarians() async {
     try {
@@ -33,7 +34,8 @@ class _HomePageState extends State<HomePage> {
                   "id": vet["id"] ?? 0,
                   "name": vet["name"],
                   "clinicName": vet["clinic"],
-                  "imagePath": vet["profile_image"] ?? "assets/user_guide1.png"
+                  "imagePath":
+                      vet["profile_image"] ?? "assets/default_profile.png"
                 }),
           );
           isLoading = false;
@@ -165,10 +167,28 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> fetchUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final response = await http.get(
+      Uri.parse("http://192.168.201.58:5000/get_user?email=${user.email}"),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        loggedInUserId = data["id"];
+        loggedInUserName = data["name"];
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     fetchVeterinarians();
+    fetchUserData();
     fetchUserId(FirebaseAuth.instance.currentUser?.email ?? "").then((_) {
       if (loggedInUserId != null) {
         fetchFavorites(loggedInUserId!);
@@ -191,7 +211,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _currentPage = nextPage;
       });
-      Future.delayed(Duration(seconds: 3), _autoSlide);
+      Future.delayed(Duration(seconds: 5), _autoSlide);
     }
   }
 
@@ -213,18 +233,21 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: Icon(Icons.search_rounded),
+            tooltip: 'Search',
             iconSize: 24,
             color: const Color.fromARGB(255, 39, 39, 39),
             onPressed: () {},
           ),
           IconButton(
             icon: Icon(Icons.calendar_today),
+            tooltip: 'Appointments',
             iconSize: 22,
             color: const Color.fromARGB(255, 39, 39, 39),
             onPressed: () {},
           ),
           IconButton(
             icon: Icon(Icons.notifications),
+            tooltip: 'Notifications',
             iconSize: 24,
             color: const Color.fromARGB(255, 39, 39, 39),
             onPressed: () {},
@@ -247,7 +270,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome Ezra',
+                    'Welcome ${loggedInUserName ?? "User"}',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -280,24 +303,28 @@ class _HomePageState extends State<HomePage> {
                   },
                   children: [
                     _buildAnimalSlider(
-                      imagePath: 'assets/user_guide1.png',
-                      description: 'This is a description for animal 1...',
+                      imagePath: 'assets/disease_awareness.jpg',
+                      description:
+                          'Is your pet coughing a lot? It might be kennel cough! Learn the signs & treatments.',
                       showIcon: true,
                     ),
                     _buildAnimalSlider(
-                      imagePath: 'assets/user_guide1.png',
-                      description: 'Here\'s some info about animal 2...',
-                      showIcon: false,
-                    ),
-                    _buildAnimalSlider(
-                      imagePath: 'assets/user_guide1.png',
-                      description: 'Details regarding animal 3 are here...',
+                      imagePath: 'assets/pet_food.jpg',
+                      description:
+                          'Not all human foods are safe for pets! Discover the best diet for a healthy pet.',
                       showIcon: true,
                     ),
                     _buildAnimalSlider(
-                      imagePath: 'assets/user_guide1.png',
-                      description: 'Details regarding animal 4 are here...',
-                      showIcon: false,
+                      imagePath: 'assets/first_aid.jpg',
+                      description:
+                          'Does your pet have an emergency? Learn quick first-aid tips that can save a life!',
+                      showIcon: true,
+                    ),
+                    _buildAnimalSlider(
+                      imagePath: 'assets/grooming.jpg',
+                      description:
+                          'Bad pet odor? Here`s how to keep your pet fresh, clean, and healthy!',
+                      showIcon: true,
                     ),
                   ],
                 ),
@@ -311,12 +338,12 @@ class _HomePageState extends State<HomePage> {
                   return AnimatedContainer(
                     duration: Duration(milliseconds: 300),
                     margin: EdgeInsets.symmetric(horizontal: 5),
-                    height: 10,
-                    width: 10,
+                    height: 8,
+                    width: 8,
                     decoration: BoxDecoration(
                       color: _currentPage == index
                           ? Colors.lightBlue
-                          : Colors.grey,
+                          : Colors.grey[700],
                       shape: BoxShape.circle,
                     ),
                   );
@@ -402,6 +429,7 @@ class _HomePageState extends State<HomePage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => DoctorProfilePage(
+                                  vetId: vet["id"],
                                   name: vet["name"]!,
                                   clinicName: vet["clinicName"]!,
                                   imagePath: vet["imagePath"]!,
@@ -441,14 +469,14 @@ class _HomePageState extends State<HomePage> {
                                             errorBuilder:
                                                 (context, error, stackTrace) {
                                               return Image.asset(
-                                                  'assets/user_guide1.png',
+                                                  'assets/default_profile.png',
                                                   width: 75,
                                                   height: 75,
                                                   fit: BoxFit.cover);
                                             },
                                           )
                                         : Image.asset(
-                                            'assets/user_guide1.png',
+                                            'assets/default_profile.png',
                                             width: 75,
                                             height: 75,
                                             fit: BoxFit.cover,
@@ -540,6 +568,7 @@ class _HomePageState extends State<HomePage> {
                                               MaterialPageRoute(
                                                 builder: (context) =>
                                                     DoctorProfilePage(
+                                                  vetId: vet["id"],
                                                   name: vet["name"]!,
                                                   clinicName:
                                                       vet["clinicName"]!,
@@ -550,6 +579,7 @@ class _HomePageState extends State<HomePage> {
                                           },
                                           icon: const Icon(Icons.arrow_forward,
                                               size: 20, color: Colors.white),
+                                              tooltip: 'view',
                                           padding: EdgeInsets.zero,
                                           constraints: const BoxConstraints(),
                                         ),
@@ -579,67 +609,94 @@ class _HomePageState extends State<HomePage> {
     bool showIcon = true,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(imagePath),
-                fit: BoxFit.cover,
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          if (showIcon)
-            Positioned(
-              top: 10,
-              left: 10,
-              child: Icon(
-                Icons.info,
-                color: const Color.fromARGB(255, 240, 225, 89),
-                size: 22,
-              ),
-            ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.all(15),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            Container(
+              height: 200,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
+                image: DecorationImage(
+                  image: AssetImage(imagePath),
+                  fit: BoxFit.cover,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withOpacity(0.7),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
                   ),
-                  SizedBox(height: 5),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Text(
-                      '...READ MORE',
-                      style: TextStyle(
-                        color: Colors.lightBlue,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+            if (showIcon)
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  padding: EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.info_outline,
+                    color: Colors.amberAccent,
+                    size: 22,
+                  ),
+                ),
+              ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.65),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: () {},
+                      child: Text(
+                        'Read More',
+                        style: TextStyle(
+                          color: Colors.lightBlueAccent,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
