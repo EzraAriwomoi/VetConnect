@@ -81,7 +81,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage>
     final animalId = widget.appointment['animal_id'];
     // Use a configuration file for base URLs in a production app
     final url = Uri.parse(
-        "http://192.168.201.58:5000/get_specific_animal?animal_id=$animalId");
+        "http://192.168.166.58:5000/get_specific_animal?animal_id=$animalId");
 
     try {
       final response = await http.get(url);
@@ -101,7 +101,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage>
   Future<void> _fetchAppointmentHistory() async {
     final animalId = widget.appointment['animal_id'];
     final url = Uri.parse(
-        "http://192.168.201.58:5000/get_animal_appointment_history?animal_id=$animalId");
+        "http://192.168.166.58:5000/get_animal_appointment_history?animal_id=$animalId");
 
     try {
       final response = await http.get(url);
@@ -132,7 +132,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage>
     }
 
     final url =
-        Uri.parse("http://192.168.201.58:5000/update_appointment_status");
+        Uri.parse("http://192.168.166.58:5000/update_appointment_status");
 
     try {
       final response = await http.post(
@@ -170,7 +170,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage>
     });
 
     final url =
-        Uri.parse("http://192.168.201.58:5000/update_appointment_status");
+        Uri.parse("http://192.168.166.58:5000/update_appointment_status");
 
     try {
       final response = await http.post(

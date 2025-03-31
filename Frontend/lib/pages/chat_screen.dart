@@ -41,7 +41,7 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.201.58:5000/get_vet_name?vet_id=${widget.chatRoomId}'),
+            'http://192.168.166.58:5000/get_vet_name?vet_id=${widget.chatRoomId}'),
       );
 
       if (response.statusCode == 200) {

@@ -10,17 +10,16 @@ class AnimalDetailsPage extends StatefulWidget {
   final Map<String, dynamic> animal;
   final int animalId;
 
-  const AnimalDetailsPage({
-    Key? key, 
-    required this.animal, 
-    required this.animalId
-  }) : super(key: key);
+  const AnimalDetailsPage(
+      {Key? key, required this.animal, required this.animalId})
+      : super(key: key);
 
   @override
   _AnimalDetailsPageState createState() => _AnimalDetailsPageState();
 }
 
-class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTickerProviderStateMixin {
+class _AnimalDetailsPageState extends State<AnimalDetailsPage>
+    with SingleTickerProviderStateMixin {
   String _selectedSection = "Overview";
   List<Map<String, dynamic>> appointments = [];
   List<Map<String, dynamic>> appointmentHistory = [];
@@ -29,14 +28,20 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
   bool isHistoryLoading = false;
   bool isReportsLoading = false;
   bool isDarkMode = false;
-  
+
   // For swipe navigation
   late TabController _tabController;
-  final List<String> _sections = ["Overview", "Appointments", "Med History", "Reports"];
-  
+  final List<String> _sections = [
+    "Overview",
+    "Appointment",
+    "Med History",
+    "Reports"
+  ];
+
   // For pull-to-refresh
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
-  
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
+
   // For collapsible sections
   Map<String, bool> _expandedSections = {};
 
@@ -44,16 +49,16 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: _sections.length, 
+      length: _sections.length,
       vsync: this,
       initialIndex: 0,
     );
-    
+
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {
           _selectedSection = _sections[_tabController.index];
-          
+
           // Load data when section is selected
           if (_selectedSection == "Med History") {
             fetchAppointmentHistory();
@@ -61,10 +66,10 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
         });
       }
     });
-    
+
     fetchAnimalDetails();
     fetchAppointments();
-    
+
     // Initialize all sections as collapsed
     for (var i = 0; i < 10; i++) {
       _expandedSections['section_$i'] = false;
@@ -84,14 +89,14 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
       isHistoryLoading = true;
       isReportsLoading = true;
     });
-    
+
     // Fetch all data
     await Future.wait([
       fetchAnimalDetails(),
       fetchAppointments(),
       fetchAppointmentHistory(forceRefresh: true),
     ]);
-    
+
     // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -107,7 +112,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.201.58:5000/get_specific_animal?animal_id=${widget.animalId}'),
+            'http://192.168.166.58:5000/get_specific_animal?animal_id=${widget.animalId}'),
       );
 
       if (response.statusCode == 200) {
@@ -129,7 +134,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.201.58:5000/get_appointments?animal_id=${widget.animal['id']}'),
+            'http://192.168.166.58:5000/get_appointments?animal_id=${widget.animal['id']}'),
       );
 
       if (response.statusCode == 200) {
@@ -146,8 +151,9 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
   }
 
   Future<void> fetchAppointmentHistory({bool forceRefresh = false}) async {
-    if (appointmentHistory.isNotEmpty && !forceRefresh) return; // Don't fetch if already loaded
-    
+    if (appointmentHistory.isNotEmpty && !forceRefresh)
+      return; // Don't fetch if already loaded
+
     setState(() {
       isHistoryLoading = true;
     });
@@ -155,7 +161,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.201.58:5000/get_animal_appointment_history?animal_id=${widget.animal['id']}'),
+            'http://192.168.166.58:5000/get_animal_appointment_history?animal_id=${widget.animal['id']}'),
       );
 
       if (response.statusCode == 200) {
@@ -183,25 +189,26 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.201.58:5000/get_animal_appointment_history?animal_id=${widget.animal['id']}'),
+            'http://192.168.166.58:5000/get_animal_appointment_history?animal_id=${widget.animal['id']}'),
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        List<Map<String, dynamic>> allAppointments = List<Map<String, dynamic>>.from(data);
-        
+        List<Map<String, dynamic>> allAppointments =
+            List<Map<String, dynamic>>.from(data);
+
         // Filter for completed appointments with notes or prescriptions
         List<Map<String, dynamic>> reports = allAppointments
-            .where((appointment) => 
-                appointment['status'] == 'Completed' && 
-                (appointment['notes']?.isNotEmpty == true || 
-                 appointment['prescription']?.isNotEmpty == true))
+            .where((appointment) =>
+                appointment['status'] == 'Completed' &&
+                (appointment['notes']?.isNotEmpty == true ||
+                    appointment['prescription']?.isNotEmpty == true))
             .toList();
-        
+
         setState(() {
           isReportsLoading = false;
         });
-        
+
         return reports;
       } else {
         print("Failed to fetch medical reports: ${response.body}");
@@ -219,7 +226,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
     setState(() {
       isDarkMode = !isDarkMode;
     });
-    
+
     // Provide haptic feedback
     HapticFeedback.lightImpact();
   }
@@ -227,7 +234,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
   @override
   Widget build(BuildContext context) {
     // Apply dark mode theme if enabled
-    final ThemeData theme = isDarkMode 
+    final ThemeData theme = isDarkMode
         ? ThemeData.dark().copyWith(
             primaryColor: Colors.lightBlue,
             cardColor: Colors.grey[850],
@@ -237,7 +244,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
             primaryColor: Colors.lightBlue,
             scaffoldBackgroundColor: Colors.grey[100],
           );
-    
+
     return Theme(
       data: theme,
       child: Scaffold(
@@ -248,19 +255,17 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
           backgroundColor: theme.primaryColor,
           elevation: 0,
           actions: [
-            IconButton(
-              icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              onPressed: toggleDarkMode,
-              tooltip: isDarkMode ? "Switch to light mode" : "Switch to dark mode",
-            ),
+            // IconButton(
+            //   icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            //   onPressed: toggleDarkMode,
+            //   tooltip: isDarkMode ? "Switch to light mode" : "Switch to dark mode",
+            // ),
             PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'edit') {
                   _showEditDialog(context);
                 } else if (value == 'delete') {
                   _deleteAnimal();
-                } else if (value == 'share') {
-                  _shareAnimalProfile();
                 }
               },
               itemBuilder: (BuildContext context) => [
@@ -271,16 +276,6 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                       Icon(Icons.edit, color: theme.iconTheme.color),
                       SizedBox(width: 10),
                       Text("Edit Details"),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'share',
-                  child: Row(
-                    children: [
-                      Icon(Icons.share, color: theme.iconTheme.color),
-                      SizedBox(width: 10),
-                      Text("Share Profile"),
                     ],
                   ),
                 ),
@@ -350,7 +345,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               color: Colors.grey[300],
-                              child: Icon(Icons.pets, size: 80, color: Colors.grey[400]),
+                              child: Icon(Icons.pets,
+                                  size: 80, color: Colors.grey[400]),
                             );
                           },
                           loadingBuilder: (context, child, loadingProgress) {
@@ -359,8 +355,9 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                               color: Colors.grey[300],
                               child: Center(
                                 child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded / 
+                                  value: loadingProgress.expectedTotalBytes !=
+                                          null
+                                      ? loadingProgress.cumulativeBytesLoaded /
                                           loadingProgress.expectedTotalBytes!
                                       : null,
                                 ),
@@ -394,7 +391,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                                     Text(
                                       widget.animal['name'],
                                       style: TextStyle(
-                                        fontSize: 24, 
+                                        fontSize: 24,
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: 0.5,
                                       ),
@@ -403,8 +400,10 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                                     Text(
                                       "${widget.animal['breed']} - ${widget.animal['species']}",
                                       style: TextStyle(
-                                        fontSize: 16, 
-                                        color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                                        fontSize: 16,
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.grey[700],
                                         fontStyle: FontStyle.italic,
                                       ),
                                     ),
@@ -412,7 +411,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                                 ),
                               ),
                               Container(
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: theme.primaryColor.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(20),
@@ -431,17 +431,17 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                           Divider(),
                           SizedBox(height: 10),
                           _buildInfoRow(
-                            icon: Icons.access_time_filled, 
-                            label: "Age", 
+                            icon: Icons.access_time_filled,
+                            label: "Age",
                             value: widget.animal['age'],
-                            iconColor: Colors.amber,
+                            iconColor: const Color.fromARGB(255, 139, 139, 139),
                           ),
                           SizedBox(height: 10),
                           _buildInfoRow(
-                            icon: Icons.color_lens, 
-                            label: "Color", 
+                            icon: Icons.color_lens,
+                            label: "Color",
                             value: widget.animal['color'],
-                            iconColor: Colors.deepOrange,
+                            iconColor: const Color.fromARGB(255, 139, 139, 139),
                           ),
                         ],
                       ),
@@ -459,8 +459,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                         return Padding(
                           padding: EdgeInsets.symmetric(horizontal: 10),
                           child: _buildRoundedButton(
-                            _sections[index], 
-                            _getSectionIcon(_sections[index]), 
+                            _sections[index],
+                            _getSectionIcon(_sections[index]),
                             _getSectionColor(_sections[index]),
                             index,
                           ),
@@ -474,7 +474,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                   // Dynamic Content Container with animation
                   AnimatedSwitcher(
                     duration: Duration(milliseconds: 400),
-                    transitionBuilder: (Widget child, Animation<double> animation) {
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
                       return FadeTransition(
                         opacity: animation,
                         child: SlideTransition(
@@ -493,76 +494,56 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
             ),
           ),
         ),
-        // Add a floating action button for quick actions
         floatingActionButton: _buildFloatingActionButton(),
       ),
     );
   }
 
   Widget _buildFloatingActionButton() {
-    // Show different FABs based on the selected section
     switch (_selectedSection) {
-      case "Appointments":
+      case "Appointment":
         return FloatingActionButton(
-          onPressed: () {
-            // Navigate to book appointment page
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Book appointment feature coming soon"))
-            );
-          },
-          backgroundColor: Colors.green,
-          child: Icon(Icons.add),
+          onPressed: () {},
+          backgroundColor: Colors.lightBlue,
+          child: Icon(
+            Icons.add,
+            color: Colors.white,
+          ),
           tooltip: "Book new appointment",
         );
       case "Med History":
         return FloatingActionButton(
           onPressed: () {
-            // Refresh history data
             fetchAppointmentHistory(forceRefresh: true);
           },
-          backgroundColor: Colors.orange,
-          child: Icon(Icons.refresh),
+          backgroundColor: Colors.lightBlue,
+          child: Icon(
+            Icons.refresh,
+            color: Colors.white,
+          ),
           tooltip: "Refresh Med History",
         );
       case "Reports":
         return FloatingActionButton(
           onPressed: () {
-            // Export all reports
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Export reports feature coming soon"))
-            );
+                SnackBar(content: Text("Export reports feature coming soon")));
           },
-          backgroundColor: Colors.red,
-          child: Icon(Icons.download),
+          backgroundColor: Colors.lightBlue,
+          child: Icon(
+            Icons.download,
+            color: Colors.white,
+          ),
           tooltip: "Export all reports",
         );
       default:
-        return FloatingActionButton(
-          onPressed: () {
-            // Share animal profile
-            _shareAnimalProfile();
-          },
-          backgroundColor: Colors.blue,
-          child: Icon(Icons.share),
-          tooltip: "Share animal profile",
-        );
+        return SizedBox.shrink();
     }
   }
 
-  void _shareAnimalProfile() {
-    // Simulate sharing functionality
-    HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Sharing ${widget.animal['name']}'s profile..."),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   Widget _buildInfoRow({
-    required IconData icon, 
-    required String label, 
+    required IconData icon,
+    required String label,
     required String value,
     Color? iconColor,
   }) {
@@ -602,7 +583,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
 
   IconData _getSectionIcon(String section) {
     switch (section) {
-      case "Appointments":
+      case "Appointment":
         return Icons.event;
       case "Med History":
         return Icons.local_hospital;
@@ -615,14 +596,14 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
 
   Color _getSectionColor(String section) {
     switch (section) {
-      case "Appointments":
-        return Colors.green;
+      case "Appointment":
+        return Colors.lightBlue;
       case "Med History":
-        return Colors.orange;
+        return Colors.lightBlue;
       case "Reports":
-        return Colors.red;
+        return Colors.lightBlue;
       default:
-        return Colors.blue;
+        return Colors.lightBlue;
     }
   }
 
@@ -638,7 +619,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
         widget.animal.clear();
         widget.animal.addAll(updatedAnimal);
       });
-      
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -656,7 +637,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Delete Animal"),
-        content: Text("Are you sure you want to delete ${widget.animal['name']}? This action cannot be undone."),
+        content: Text(
+            "Are you sure you want to delete ${widget.animal['name']}? This action cannot be undone."),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -683,16 +665,17 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
     );
   }
 
-  Widget _buildRoundedButton(String label, IconData icon, Color color, int index) {
+  Widget _buildRoundedButton(
+      String label, IconData icon, Color color, int index) {
     bool isSelected = _selectedSection == label;
-    
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
         setState(() {
           _selectedSection = label;
           _tabController.animateTo(index);
-          
+
           // Load data when section is selected
           if (label == "Med History") {
             fetchAppointmentHistory();
@@ -711,17 +694,19 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
               decoration: BoxDecoration(
                 color: isSelected ? color : color.withOpacity(0.2),
                 shape: BoxShape.circle,
-                boxShadow: isSelected ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.4),
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ] : [],
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: color.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ]
+                    : [],
               ),
               child: Icon(
-                icon, 
-                color: isSelected ? Colors.white : color, 
+                icon,
+                color: isSelected ? Colors.white : color,
                 size: 28,
               ),
             ),
@@ -730,7 +715,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13, 
+                fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 color: isSelected ? color : null,
               ),
@@ -743,7 +728,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
 
   Widget _getContentWidget() {
     switch (_selectedSection) {
-      case "Appointments":
+      case "Appointment":
         return _buildAppointmentsSection();
       case "Med History":
         return _buildMedicalHistorySection();
@@ -765,7 +750,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
             ),
             SizedBox(height: 16),
             Text("Loading animal details...",
-                style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[600])),
+                style: TextStyle(
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600])),
           ],
         ),
       );
@@ -799,7 +785,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
       children: [
         // Overview Card
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           elevation: 4,
           shadowColor: Colors.black26,
           child: Padding(
@@ -809,14 +796,18 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
               children: [
                 Row(
                   children: [
-                    Icon(Icons.pets, color: Colors.lightBlue, size: 22),
+                    Icon(
+                      Icons.pets,
+                      color: Colors.grey[400],
+                      size: 22,
+                    ),
                     SizedBox(width: 8),
                     Text(
                       "Animal Overview",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.lightBlue,
+                        color: Colors.grey[400],
                       ),
                     ),
                   ],
@@ -833,7 +824,9 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                             "${entry.key}:",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                              color: isDarkMode
+                                  ? Colors.grey[300]
+                                  : Colors.grey[700],
                             ),
                           ),
                         ),
@@ -853,87 +846,13 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
             ),
           ),
         ),
-        
+
         SizedBox(height: 20),
-        
-        // Health Summary Card
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          elevation: 4,
-          shadowColor: Colors.black26,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.health_and_safety, color: Colors.green, size: 22),
-                        SizedBox(width: 8),
-                        Text(
-                          "Health Summary",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        _expandedSections['section_health'] == true 
-                            ? Icons.keyboard_arrow_up 
-                            : Icons.keyboard_arrow_down,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _expandedSections['section_health'] = 
-                              !(_expandedSections['section_health'] ?? false);
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                
-                if (_expandedSections['section_health'] == true) ...[
-                  SizedBox(height: 15),
-                  // Health status indicators
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildHealthIndicator("Weight", "Normal", Colors.green),
-                      _buildHealthIndicator("Vaccinations", "Up to date", Colors.green),
-                      _buildHealthIndicator("Checkups", "Regular", Colors.green),
-                    ],
-                  ),
-                ],
-                
-                if (_expandedSections['section_health'] != true)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      "Tap to view health metrics and vaccination status",
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        
-        SizedBox(height: 20),
-        
+
         // Recent Activity Card
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           elevation: 4,
           shadowColor: Colors.black26,
           child: Padding(
@@ -943,20 +862,20 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
               children: [
                 Row(
                   children: [
-                    Icon(Icons.history, color: Colors.purple, size: 22),
+                    Icon(Icons.history, color: Colors.grey[400], size: 22),
                     SizedBox(width: 8),
                     Text(
                       "Recent Activity",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.purple,
+                        color: Colors.grey[400],
                       ),
                     ),
                   ],
                 ),
                 SizedBox(height: 15),
-                
+
                 // Recent activity list
                 appointments.isEmpty && appointmentHistory.isEmpty
                     ? Center(
@@ -965,7 +884,9 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                           child: Text(
                             "No recent activity found",
                             style: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -977,15 +898,19 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                             _buildActivityItem(
                               date: appointments[0]["date"] ?? "",
                               title: "Upcoming Appointment",
-                              description: "With ${appointments[0]["vet_name"] ?? "Unknown Vet"}",
+                              description:
+                                  "With ${appointments[0]["vet_name"] ?? "Unknown Vet"}",
                               icon: Icons.event,
                               color: Colors.blue,
                             ),
                           if (appointmentHistory.isNotEmpty)
                             _buildActivityItem(
                               date: appointmentHistory[0]["date"] ?? "",
-                              title: appointmentHistory[0]["appointment_type"] ?? "Checkup",
-                              description: "Status: ${appointmentHistory[0]["status"] ?? "Unknown"}",
+                              title: appointmentHistory[0]
+                                      ["appointment_type"] ??
+                                  "Checkup",
+                              description:
+                                  "Status: ${appointmentHistory[0]["status"] ?? "Unknown"}",
                               icon: Icons.medical_services,
                               color: Colors.orange,
                             ),
@@ -999,42 +924,42 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
     );
   }
 
-  Widget _buildHealthIndicator(String label, String status, Color color) {
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Icon(
-              Icons.check_circle,
-              color: color,
-              size: 30,
-            ),
-          ),
-        ),
-        SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-        Text(
-          status,
-          style: TextStyle(
-            color: color,
-            fontSize: 12,
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildHealthIndicator(String label, String status, Color color) {
+  //   return Column(
+  //     children: [
+  //       Container(
+  //         width: 60,
+  //         height: 60,
+  //         decoration: BoxDecoration(
+  //           color: color.withOpacity(0.2),
+  //           shape: BoxShape.circle,
+  //         ),
+  //         child: Center(
+  //           child: Icon(
+  //             Icons.check_circle,
+  //             color: color,
+  //             size: 30,
+  //           ),
+  //         ),
+  //       ),
+  //       SizedBox(height: 8),
+  //       Text(
+  //         label,
+  //         style: TextStyle(
+  //           fontWeight: FontWeight.bold,
+  //           fontSize: 14,
+  //         ),
+  //       ),
+  //       Text(
+  //         status,
+  //         style: TextStyle(
+  //           color: color,
+  //           fontSize: 12,
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildActivityItem({
     required String date,
@@ -1101,20 +1026,20 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
           children: [
             Row(
               children: [
-                Icon(Icons.event, color: Colors.green, size: 22),
+                Icon(Icons.event, color: const Color.fromARGB(255, 139, 139, 139),),
                 SizedBox(width: 8),
                 Text(
                   "Appointments for ${widget.animal['name'] ?? 'Unknown'}",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    color: const Color.fromARGB(255, 139, 139, 139),
                   ),
                 ),
               ],
             ),
             SizedBox(height: 15),
-            
+
             // Search and filter
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1139,9 +1064,9 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                 ],
               ),
             ),
-            
+
             SizedBox(height: 15),
-            
+
             appointments.isEmpty
                 ? Center(
                     child: Column(
@@ -1150,14 +1075,17 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                         Icon(
                           Icons.event_busy,
                           size: 64,
-                          color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                          color:
+                              isDarkMode ? Colors.grey[700] : Colors.grey[300],
                         ),
                         SizedBox(height: 16),
                         Text(
                           "No appointments found",
                           style: TextStyle(
                             fontSize: 16,
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            color: isDarkMode
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1166,7 +1094,9 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                           "Tap the + button to schedule a new appointment",
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                            color: isDarkMode
+                                ? Colors.grey[500]
+                                : Colors.grey[500],
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -1181,7 +1111,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                     separatorBuilder: (context, index) => Divider(height: 30),
                     itemBuilder: (context, index) {
                       final appointment = appointments[index];
-                      
+
                       return InkWell(
                         onTap: () {
                           // Show appointment details
@@ -1203,7 +1133,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                                 child: Center(
                                   child: Icon(
                                     _getStatusIcon(appointment["status"]),
-                                    color: _getStatusColor(appointment["status"]),
+                                    color:
+                                        _getStatusColor(appointment["status"]),
                                     size: 30,
                                   ),
                                 ),
@@ -1214,7 +1145,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      appointment["appointment_type"] ?? "Unknown",
+                                      appointment["appointment_type"] ??
+                                          "Unknown",
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
@@ -1233,28 +1165,37 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                                         Icon(
                                           Icons.calendar_today,
                                           size: 14,
-                                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600],
                                         ),
                                         SizedBox(width: 4),
                                         Text(
-                                          _formatDate(appointment["date"] ?? ""),
+                                          _formatDate(
+                                              appointment["date"] ?? ""),
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                            color: isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
                                           ),
                                         ),
                                         SizedBox(width: 10),
                                         Icon(
                                           Icons.access_time,
                                           size: 14,
-                                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600],
                                         ),
                                         SizedBox(width: 4),
                                         Text(
                                           appointment["time"] ?? "No Time",
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                            color: isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
                                           ),
                                         ),
                                       ],
@@ -1275,7 +1216,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
-                                    color: _getStatusColor(appointment["status"]),
+                                    color:
+                                        _getStatusColor(appointment["status"]),
                                   ),
                                 ),
                               ),
@@ -1398,7 +1340,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
     );
   }
 
-  Widget _buildDetailItem(String label, String value, IconData icon, {Color? valueColor}) {
+  Widget _buildDetailItem(String label, String value, IconData icon,
+      {Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
@@ -1525,7 +1468,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
             CircularProgressIndicator(color: Colors.orange),
             SizedBox(height: 16),
             Text("Loading Med History...",
-                style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[600])),
+                style: TextStyle(
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600])),
           ],
         ),
       );
@@ -1542,32 +1486,35 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
           children: [
             Row(
               children: [
-                Icon(Icons.local_hospital, color: Colors.orange, size: 22),
+                Icon(Icons.local_hospital, color: const Color.fromARGB(255, 139, 139, 139), size: 22),
                 SizedBox(width: 8),
                 Text(
                   "Med History for ${widget.animal['name']}",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: const Color.fromARGB(255, 139, 139, 139),
                   ),
                 ),
               ],
             ),
             SizedBox(height: 15),
-            
             appointmentHistory.isEmpty
                 ? Center(
                     child: Column(
                       children: [
-                        Icon(Icons.history_toggle_off, 
-                             size: 64, 
-                             color: isDarkMode ? Colors.grey[700] : Colors.grey[300]),
+                        Icon(Icons.history_toggle_off,
+                            size: 64,
+                            color: isDarkMode
+                                ? Colors.grey[700]
+                                : Colors.grey[300]),
                         SizedBox(height: 16),
                         Text("No Med History available",
                             style: TextStyle(
-                              fontSize: 16, 
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              fontSize: 16,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                               fontWeight: FontWeight.bold,
                             )),
                         SizedBox(height: 8),
@@ -1575,7 +1522,9 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                           "Medical records will appear here after appointments",
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                            color: isDarkMode
+                                ? Colors.grey[500]
+                                : Colors.grey[500],
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -1595,7 +1544,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: _getStatusColor(record["status"]).withOpacity(0.2),
+                                color: _getStatusColor(record["status"])
+                                    .withOpacity(0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
@@ -1618,24 +1568,30 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                             trailing: Text(
                               _formatDate(record["date"] ?? ""),
                               style: TextStyle(
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                             ),
                             onTap: () {
                               setState(() {
-                                _expandedSections['record_$index'] = 
-                                    !(_expandedSections['record_$index'] ?? false);
+                                _expandedSections['record_$index'] =
+                                    !(_expandedSections['record_$index'] ??
+                                        false);
                               });
                             },
                           ),
-                          
                           if (_expandedSections['record_$index'] == true) ...[
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 8.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (record["notes"] != null && record["notes"].toString().isNotEmpty) ...[
+                                  if (record["notes"] != null &&
+                                      record["notes"]
+                                          .toString()
+                                          .isNotEmpty) ...[
                                     Text(
                                       "Medical Notes:",
                                       style: TextStyle(
@@ -1647,16 +1603,23 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                                       margin: EdgeInsets.symmetric(vertical: 8),
                                       padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                                        color: isDarkMode
+                                            ? Colors.grey[800]
+                                            : Colors.grey[100],
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
-                                          color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                                          color: isDarkMode
+                                              ? Colors.grey[700]!
+                                              : Colors.grey[300]!,
                                         ),
                                       ),
                                       child: Text(record["notes"]),
                                     ),
                                   ],
-                                  if (record["prescription"] != null && record["prescription"].toString().isNotEmpty) ...[
+                                  if (record["prescription"] != null &&
+                                      record["prescription"]
+                                          .toString()
+                                          .isNotEmpty) ...[
                                     Text(
                                       "Prescription:",
                                       style: TextStyle(
@@ -1668,10 +1631,14 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                                       margin: EdgeInsets.symmetric(vertical: 8),
                                       padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                                        color: isDarkMode
+                                            ? Colors.grey[800]
+                                            : Colors.grey[100],
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
-                                          color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                                          color: isDarkMode
+                                              ? Colors.grey[700]!
+                                              : Colors.grey[300]!,
                                         ),
                                       ),
                                       child: Text(record["prescription"]),
@@ -1681,7 +1648,6 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                               ),
                             ),
                           ],
-                          
                           Divider(),
                         ],
                       );
@@ -1695,226 +1661,253 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
 
   Widget _buildReportsSection() {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: fetchMedicalReports(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(color: Colors.red),
-                SizedBox(height: 16),
-                Text("Loading medical reports...",
-                    style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[600])),
-              ],
-            ),
-          );
-        }
-        
-        if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.red),
-                SizedBox(height: 16),
-                Text("Error loading reports: ${snapshot.error}",
-                    style: TextStyle(color: Colors.red)),
-              ],
-            ),
-          );
-        }
-        
-        final reports = snapshot.data ?? [];
-        
-        return Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          elevation: 4,
-          shadowColor: Colors.black26,
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.assignment, color: Colors.red, size: 22),
-                    SizedBox(width: 8),
-                    Text(
-                      "Medical Reports for ${widget.animal['name']}",
+        future: fetchMedicalReports(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Colors.lightBlue,),
+                  SizedBox(height: 16),
+                  Text("Loading medical reports...",
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 15),
-                
-                reports.isEmpty
-                    ? Center(
-                        child: Column(
-                          children: [
-                            Icon(Icons.description_outlined, 
-                                 size: 64, 
-                                 color: isDarkMode ? Colors.grey[700] : Colors.grey[300]),
-                            SizedBox(height: 16),
-                            Text("No medical reports available",
-                                style: TextStyle(
-                                  fontSize: 16, 
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                  fontWeight: FontWeight.bold,
-                                )),
-                            SizedBox(height: 8),
-                            Text(
-                              "Reports are generated from completed appointments",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                          color: isDarkMode
+                              ? Colors.grey[400]
+                              : Colors.grey[600])),
+                ],
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  SizedBox(height: 16),
+                  Text("Error loading reports: ${snapshot.error}",
+                      style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            );
+          }
+
+          final reports = snapshot.data ?? [];
+
+          return Card(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            elevation: 4,
+            shadowColor: Colors.black26,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.assignment, color: Colors.grey[400], size: 22),
+                      SizedBox(width: 8),
+                      Text(
+                        "Medical Reports for ${widget.animal['name']}",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[400],
                         ),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: reports.length,
-                        itemBuilder: (context, index) {
-                          final report = reports[index];
-                          bool hasPrescription = report["prescription"] != null && 
-                                               report["prescription"].toString().isNotEmpty;
-                          bool hasNotes = report["notes"] != null && 
-                                        report["notes"].toString().isNotEmpty;
-                          
-                          String reportType = hasPrescription ? "Prescription" : "Medical Notes";
-                          
-                          return Card(
-                            margin: EdgeInsets.only(bottom: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                            child: InkWell(
-                              onTap: () {
-                                _showReportDetails(report);
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(Icons.description, 
-                                                color: Colors.red, 
-                                                size: 20),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              reportType,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 15),
+                  reports.isEmpty
+                      ? Center(
+                          child: Column(
+                            children: [
+                              Icon(Icons.description_outlined,
+                                  size: 64,
+                                  color: isDarkMode
+                                      ? Colors.grey[700]
+                                      : Colors.grey[300]),
+                              SizedBox(height: 16),
+                              Text("No medical reports available",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                                    fontWeight: FontWeight.bold,
+                                  )),
+                              SizedBox(height: 8),
+                              Text(
+                                "Reports are generated from completed appointments",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDarkMode
+                                      ? Colors.grey[500]
+                                      : Colors.grey[500],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: reports.length,
+                          itemBuilder: (context, index) {
+                            final report = reports[index];
+                            bool hasPrescription = report["prescription"] !=
+                                    null &&
+                                report["prescription"].toString().isNotEmpty;
+                            bool hasNotes = report["notes"] != null &&
+                                report["notes"].toString().isNotEmpty;
+
+                            String reportType = hasPrescription
+                                ? "Prescription"
+                                : "Medical Notes";
+
+                            return Card(
+                              margin: EdgeInsets.only(bottom: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                              child: InkWell(
+                                onTap: () {
+                                  _showReportDetails(report);
+                                },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.description,
+                                                  color: Colors.red, size: 20),
+                                              SizedBox(width: 8),
+                                              Text(
+                                                reportType,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
+                                            ],
+                                          ),
+                                          Text(
+                                            _formatDate(report["date"] ?? ""),
+                                            style: TextStyle(
+                                              color: isDarkMode
+                                                  ? Colors.grey[400]
+                                                  : Colors.grey[600],
+                                              fontSize: 12,
                                             ),
-                                          ],
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 10),
+                                      Text(
+                                        report["appointment_type"] ?? "Checkup",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
                                         ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      if (hasNotes)
                                         Text(
-                                          _formatDate(report["date"] ?? ""),
+                                          "Notes: ${report["notes"]}",
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                            fontSize: 12,
+                                            fontSize: 14,
+                                            color: isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 10),
-                                    Text(
-                                      report["appointment_type"] ?? "Checkup",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    if (hasNotes)
-                                      Text(
-                                        "Notes: ${report["notes"]}",
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                        ),
-                                      ),
-                                    if (hasPrescription)
-                                      Text(
-                                        "Prescription: ${report["prescription"]}",
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                        ),
-                                      ),
-                                    SizedBox(height: 10),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        OutlinedButton.icon(
-                                          icon: Icon(Icons.visibility, size: 16),
-                                          label: Text("View"),
-                                          onPressed: () {
-                                            _showReportDetails(report);
-                                          },
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: Colors.red,
-                                            side: BorderSide(color: Colors.red),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
+                                      if (hasPrescription)
+                                        Text(
+                                          "Prescription: ${report["prescription"]}",
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
                                           ),
                                         ),
-                                        SizedBox(width: 8),
-                                        ElevatedButton.icon(
-                                          icon: Icon(Icons.download, size: 16),
-                                          label: Text("Export"),
-                                          onPressed: () {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text("Export feature coming soon"),
-                                                behavior: SnackBarBehavior.floating,
+                                      SizedBox(height: 10),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          OutlinedButton.icon(
+                                            icon: Icon(Icons.visibility,
+                                                size: 16),
+                                            label: Text("View"),
+                                            onPressed: () {
+                                              _showReportDetails(report);
+                                            },
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: Colors.red,
+                                              side:
+                                                  BorderSide(color: Colors.red),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
-                                            );
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.red,
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(8),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                          SizedBox(width: 8),
+                                          ElevatedButton.icon(
+                                            icon:
+                                                Icon(Icons.download, size: 16),
+                                            label: Text("Export"),
+                                            onPressed: () {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                      "Export feature coming soon"),
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                ),
+                                              );
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              foregroundColor: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-              ],
+                            );
+                          },
+                        ),
+                ],
+              ),
             ),
-          ),
-        );
-      }
-    );
+          );
+        });
   }
 
   void _showReportDetails(Map<String, dynamic> report) {
@@ -1938,12 +1931,16 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                 Text("Date: ${_formatDate(report["date"] ?? "")}",
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
-                Text("Appointment Type: ${report["appointment_type"] ?? "Checkup"}"),
+                Text(
+                    "Appointment Type: ${report["appointment_type"] ?? "Checkup"}"),
                 SizedBox(height: 8),
-                Text("Veterinarian: ${report["veterinarian_name"] ?? "Unknown"}"),
+                Text(
+                    "Veterinarian: ${report["veterinarian_name"] ?? "Unknown"}"),
                 SizedBox(height: 16),
-                if (report["notes"] != null && report["notes"].toString().isNotEmpty) ...[
-                  Text("Medical Notes:", style: TextStyle(fontWeight: FontWeight.bold)),
+                if (report["notes"] != null &&
+                    report["notes"].toString().isNotEmpty) ...[
+                  Text("Medical Notes:",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 4),
                   Container(
                     padding: EdgeInsets.all(12),
@@ -1951,15 +1948,18 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                       color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color:
+                            isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
                       ),
                     ),
                     child: Text(report["notes"]),
                   ),
                   SizedBox(height: 16),
                 ],
-                if (report["prescription"] != null && report["prescription"].toString().isNotEmpty) ...[
-                  Text("Prescription:", style: TextStyle(fontWeight: FontWeight.bold)),
+                if (report["prescription"] != null &&
+                    report["prescription"].toString().isNotEmpty) ...[
+                  Text("Prescription:",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 4),
                   Container(
                     padding: EdgeInsets.all(12),
@@ -1967,7 +1967,8 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
                       color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color:
+                            isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
                       ),
                     ),
                     child: Text(report["prescription"]),
@@ -1987,8 +1988,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage> with SingleTicker
               // Here you would implement printing or sharing functionality
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Report export feature coming soon"))
-              );
+                  SnackBar(content: Text("Report export feature coming soon")));
             },
             icon: Icon(Icons.print, size: 16),
             label: Text("Print"),

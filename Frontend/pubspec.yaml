@@ -48,6 +48,8 @@ dependencies:
   flutter_svg: ^2.0.17
   timeline_tile: ^2.0.0
   fl_chart: ^0.70.2
+  location: ^8.0.0
+  geolocator: ^13.0.3
 
 dev_dependencies:
   flutter_test:
@@ -73,7 +75,15 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/
+    - assets/disease_awareness.jpg
+    - assets/pet_food.jpg
+    - assets/first_aid.jpg
+    - assets/grooming.jpg
+    - assets/default_profile.png
+    - assets/vet_marker.png
+    - assets/user_location.png
+    - assets/logo.png
+    - assets/google_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

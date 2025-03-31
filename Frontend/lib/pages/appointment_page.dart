@@ -41,7 +41,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
     if (user == null) return;
 
     final response = await http.get(
-      Uri.parse("http://192.168.201.58:5000/get_user?email=${user.email}"),
+      Uri.parse("http://192.168.166.58:5000/get_user?email=${user.email}"),
     );
 
     if (response.statusCode == 200) {
@@ -57,7 +57,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
 
   Future<void> fetchAnimals(int ownerId) async {
     final response = await http.get(
-      Uri.parse('http://192.168.201.58:5000/get_animals?owner_id=$ownerId'),
+      Uri.parse('http://192.168.166.58:5000/get_animals?owner_id=$ownerId'),
     );
 
     if (response.statusCode == 200) {
@@ -173,7 +173,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
     }
 
     final response = await http.post(
-      Uri.parse('http://192.168.201.58:5000/book_appointment'),
+      Uri.parse('http://192.168.166.58:5000/book_appointment'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "owner_id": loggedInUserId,

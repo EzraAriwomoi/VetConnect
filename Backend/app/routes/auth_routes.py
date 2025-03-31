@@ -3,11 +3,13 @@ import bcrypt
 from firebase_admin import auth
 from flask import Blueprint, jsonify, request, url_for
 from flask_cors import CORS
-from app.models import Animal, AnimalOwner, FavoriteVeterinarian, Veterinarian
+from app.models import Animal, AnimalOwner, Appointment, FavoriteVeterinarian, Review, Veterinarian
 from app.services.auth_service import register_user, login_user
 from app import db
 import secrets
 import mysql.connector
+import pytz
+from pytz import timezone
 import cloudinary
 import cloudinary.uploader
 
@@ -28,6 +30,11 @@ cloudinary.config(
     api_key="622252338293132",
     api_secret="sLoZrrBF3BQ6WJGwYV2YbXg6d38"
 )
+
+LOCAL_TZ = timezone("Africa/Nairobi")
+
+def utc_to_local(utc_dt):
+    return utc_dt.replace(tzinfo=pytz.utc).astimezone(LOCAL_TZ)
 
 
 @auth_bp.route('/register/animal_owner', methods=['POST', 'OPTIONS'])
@@ -95,17 +102,25 @@ def get_veterinarians():
 
 @auth_bp.route('/get_vet_name', methods=['GET'])
 def get_vet_name():
-    vet_email = request.args.get('vet_id')
+    vet_id = request.args.get('vet_id', type=int)
+    if not vet_id:
+        return jsonify({"error": "Missing vet_id"}), 400
+
     conn = get_mysql_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT name FROM Veterinarian WHERE email = %s", (vet_email,))
+    cursor.execute("SELECT id, name, specialization FROM Veterinarian WHERE id = %s", (vet_id,))
     vet = cursor.fetchone()
-
     conn.close()
 
+    print("Fetched vet:", vet)
+
     if vet:
-        return jsonify({"name": vet["name"]})
+        return jsonify({
+            "id": vet["id"],
+            "name": vet["name"],
+            "specialization": vet["specialization"].split(",") if vet["specialization"] else []
+        })
     else:
         return jsonify({"error": "Vet not found"}), 404
 
@@ -135,22 +150,20 @@ def get_user():
     cursor = connection.cursor(dictionary=True)
 
     # Check if the email belongs to an animal owner
-    cursor.execute("SELECT id, name FROM animal_owner WHERE email = %s", (email,))
+    cursor.execute("SELECT id, name, 'animal_owner' AS user_type FROM animal_owner WHERE email = %s", (email,))
     user = cursor.fetchone()
 
     # If not found in AnimalOwner, check Veterinarian table
     if not user:
-        cursor.execute("SELECT id, name FROM Veterinarian WHERE email = %s", (email,))
+        cursor.execute("SELECT id, name, clinic, specialization, 'veterinarian' AS user_type FROM Veterinarian WHERE email = %s", (email,))
         user = cursor.fetchone()
 
     cursor.close()
     connection.close()
 
     if user:
-        print(f"User fetched for email {email}: {user}")  # Debugging line
         return jsonify(user), 200
     else:
-        print(f"User not found for email: {email}")  # Debugging line
         return jsonify({"error": "User not found"}), 404
 
 
@@ -160,7 +173,7 @@ def forgot_password():
     email = data.get('email')
     user = AnimalOwner.query.filter_by(email=email).first() or Veterinarian.query.filter_by(email=email).first()
     if not user:
-        return jsonify({"message": "If this email is associated with an account, a reset link will be sent."}), 200
+        return jsonify({"message": "Email is not registered"}), 200
     reset_token = secrets.token_urlsafe(32)
     user.reset_token = reset_token
     user.reset_token_expiry = datetime.utcnow() + timedelta(minutes=30)
@@ -200,10 +213,11 @@ def reset_password():
     return jsonify({"message": "Password reset successful!"}), 200
 
 
+# Registration of animals
 @auth_bp.route('/register_animal', methods=['POST'])
 def register_animal():
     data = request.json
-    owner_id = data.get('owner_id')
+    owner_id = data.get('owner_id') # Foreign key to AnimalOwner
     name = data.get('name')
     breed = data.get('breed')
     species = data.get('species')
@@ -289,6 +303,25 @@ def get_animals():
         "color": animal.color,
         "image_url": animal.image_url
     } for animal in animals]), 200
+
+@auth_bp.route('/get_specific_animal', methods=['GET'])
+def get_specific_animal():
+    animal_id = request.args.get('animal_id', type=int)
+    if animal_id is None:
+        return jsonify({"error": "Missing animal_id"}), 400
+
+    animal = Animal.query.get(animal_id)
+    if not animal:
+        return jsonify({"error": "Animal not found"}), 404
+
+    return jsonify({
+        "name": animal.name,
+        "date_of_birth": animal.date_of_birth.strftime("%Y-%m-%d"),
+        "breed": animal.breed,
+        "color": animal.color,
+        "gender": animal.gender,
+        "species": animal.species
+    }), 200
 
 
 @auth_bp.route('/update_animal/<int:animal_id>', methods=['PUT'])
@@ -414,7 +447,7 @@ def remove_favorite():
         if not favorite:
             cursor.close()
             connection.close()
-            return jsonify({"error": "Favorite not found"}), 404
+            return jsonify({"error": "Favorite not found"}), 4042
 
         # Delete the favorite record
         cursor.execute(
@@ -456,3 +489,247 @@ def get_favorites():
 
     return jsonify(favorites), 200
 
+
+@auth_bp.route('/book_appointment', methods=['POST'])
+def book_appointment():
+    data = request.get_json()
+    owner_id = data.get("owner_id") # Foreign key to AnimalOwner
+    animal_id = data.get("animal_id") # Foreign key to Animal
+    veterinarian_id = data.get("veterinarian_id") # Foreign key to Veterinarian
+    date = data.get("date")
+    time = data.get("time")
+    appointment_type = data.get("appointment_type")
+
+    if not owner_id or not veterinarian_id or not animal_id or not date or not time or not appointment_type:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    animal = Animal.query.get(animal_id)
+    if not animal:
+        return jsonify({"error": "Animal not found"}), 404
+    try:
+        new_appointment = Appointment(
+            owner_id=owner_id,
+            animal_id=animal_id,
+            veterinarian_id=veterinarian_id,
+            date=datetime.strptime(date, "%Y-%m-%d"),
+            time=time,
+            appointment_type=appointment_type,
+            status="Pending", # Default status
+            notes="",
+            prescription=""
+        )
+        db.session.add(new_appointment)
+        db.session.commit() # Commit the new appointment to the database
+        return jsonify({
+            "message": "Appointment booked successfully and is now Pending.",
+            "appointment_id": new_appointment.id
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@auth_bp.route('/get_appointments', methods=['GET'])
+def get_appointments():
+    animal_id = request.args.get('animal_id', type=int)
+    if animal_id is None:
+        return jsonify({"error": "Missing animal_id"}), 400
+
+    appointments = Appointment.query.filter_by(animal_id=animal_id).all()
+
+    return jsonify([
+        {
+            "id": appointment.id,
+            "date": appointment.date.strftime("%Y-%m-%d"),
+            "time": appointment.time,
+            "vet_name": appointment.veterinarian.name,
+            "appointment_type": appointment.appointment_type,
+            "status": appointment.status,
+            "profile_image": appointment.veterinarian.profile_image
+        }
+        for appointment in appointments
+    ]), 200
+
+
+@auth_bp.route('/get_vet_appointments', methods=['GET'])
+def get_vet_appointments():
+    veterinarian_id = request.args.get('veterinarian_id', type=int)
+    if not veterinarian_id:
+        return jsonify({"error": "Missing veterinarian_id"}), 400
+
+    try:
+        appointments = (
+            db.session.query(Appointment, Animal.name, Animal.species, Animal.image_url)
+            .join(Animal, Appointment.animal_id == Animal.id)
+            .filter(Appointment.veterinarian_id == veterinarian_id, Appointment.date >= datetime.today().date())
+            .order_by(Appointment.date, Appointment.time)
+            .all()
+        )
+
+        appointment_list = [
+            {
+                "id": appointment.Appointment.id,
+                "owner_id": appointment.Appointment.owner_id,
+                "animal_id": appointment.Appointment.animal_id,
+                "veterinarian_id": appointment.Appointment.veterinarian_id,
+                "date": appointment.Appointment.date.strftime("%Y-%m-%d"),
+                "time": appointment.Appointment.time,
+                "appointment_type": appointment.Appointment.appointment_type,
+                "animal_name": appointment.name,
+                "animal_species": appointment.species,
+                "animal_image": appointment.image_url if appointment.image_url else "",
+                "status": getattr(appointment.Appointment, 'status', 'Pending'),
+                "notes": getattr(appointment.Appointment, 'notes', ''),
+                "prescription": getattr(appointment.Appointment, 'prescription', '')
+            }
+            for appointment in appointments
+        ]
+
+        return jsonify(appointment_list), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@auth_bp.route('/update_appointment_status', methods=['POST'])
+def update_appointment_status():
+    data = request.get_json()
+    appointment_id = data.get("appointment_id")
+    new_status = data.get("status")
+
+    if not appointment_id or not new_status:
+        return jsonify({"error": "Missing appointment_id or status"}), 400
+
+    valid_statuses = ["Pending", "Upcoming", "Completed", "Missed"]
+    if new_status not in valid_statuses:
+        return jsonify({"error": "Invalid status. Allowed: Pending, Upcoming, Completed, Missed"}), 400
+
+    appointment = Appointment.query.get(appointment_id)
+    if not appointment:
+        return jsonify({"error": "Appointment not found"}), 404
+
+    try:
+        appointment.status = new_status
+        db.session.commit()
+
+        return jsonify({"message": f"Appointment status updated to {new_status}"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@auth_bp.route('/update_appointment', methods=['POST'])
+def update_appointment():
+    data = request.get_json()
+    appointment_id = data.get("appointment_id")
+    status = data.get("status")
+    notes = data.get("notes", "")
+    prescription = data.get("prescription", "")
+
+    if not appointment_id or not status:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        appointment = Appointment.query.get(appointment_id)
+        if not appointment:
+            return jsonify({"error": "Appointment not found"}), 404
+
+        appointment.status = status
+        appointment.notes = notes
+        appointment.prescription = prescription
+        db.session.commit()
+
+        return jsonify({"message": "Appointment updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@auth_bp.route('/get_animal_appointment_history', methods=['GET'])
+def get_animal_appointment_history():
+    animal_id = request.args.get('animal_id', type=int)
+    if not animal_id:
+        return jsonify({"error": "Missing animal_id"}), 400
+
+    try:
+        # Get all appointments for this animal, ordered by date (newest first)
+        appointments = (
+            Appointment.query
+            .filter_by(animal_id=animal_id)
+            .order_by(Appointment.date.desc(), Appointment.time.desc())
+            .all()
+        )
+
+        history = []
+        for appointment in appointments:
+            # Get veterinarian name
+            vet = Veterinarian.query.get(appointment.veterinarian_id)
+            vet_name = vet.name if vet else "Unknown Veterinarian"
+            
+            history.append({
+                "id": appointment.id,
+                "date": appointment.date.strftime("%Y-%m-%d"),
+                "time": appointment.time,
+                "appointment_type": appointment.appointment_type,
+                "status": appointment.status,
+                "notes": appointment.notes,
+                "prescription": appointment.prescription,
+                "veterinarian_name": vet_name,
+                "created_at": appointment.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            })
+
+        return jsonify(history), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@auth_bp.route('/submit_review', methods=['POST'])
+def submit_review():
+    data = request.get_json()
+    veterinarian_id = data.get("veterinarian_id")
+    owner_id = data.get("owner_id")
+    review_text = data.get("review_text")
+
+    if not veterinarian_id or not owner_id or not review_text:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        new_review = Review(
+            veterinarian_id=veterinarian_id,
+            owner_id=owner_id,
+            review_text=review_text
+        )
+        db.session.add(new_review)
+        db.session.commit()
+        return jsonify({"message": "Review submitted successfully"}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+
+@auth_bp.route('/get_reviews', methods=['GET'])
+def get_reviews():
+    vet_id = request.args.get('vet_id', type=int)
+    if not vet_id:
+        return jsonify({"error": "Missing vet_id"}), 400
+
+    reviews = Review.query.filter_by(veterinarian_id=vet_id).all()
+    review_list = []
+
+    for review in reviews:
+        owner = AnimalOwner.query.get(review.owner_id)
+        owner_name = owner.name if owner else "Unknown"
+
+        local_time = utc_to_local(review.created_at).strftime("%Y-%m-%d %H:%M:%S")
+
+        review_list.append({
+            "id": review.id,
+            "veterinarian_id": review.veterinarian_id,
+            "owner_id": review.owner_id,
+            "user_name": owner_name,
+            "review_text": review.review_text,
+            "created_at": local_time
+        })
+
+    return jsonify(review_list), 200

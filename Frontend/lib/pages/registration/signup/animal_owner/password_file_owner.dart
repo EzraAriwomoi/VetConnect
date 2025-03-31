@@ -53,7 +53,7 @@ class _PasswordFileOwnerPageState extends State<PasswordFileOwnerPage> {
     });
 
     final Uri url =
-        Uri.parse('http://192.168.201.58:5000/register/animal_owner');
+        Uri.parse('http://192.168.166.58:5000/register/animal_owner');
 
     try {
       final response = await http.post(

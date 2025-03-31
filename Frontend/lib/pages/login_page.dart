@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     final response = await http.post(
-      Uri.parse('http://192.168.201.58:5000/login'),
+      Uri.parse('http://192.168.166.58:5000/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': _emailController1.text,
@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
     print("Fetching user ID for: $email");
 
     final response = await http.get(
-      Uri.parse('http://192.168.201.58:5000/get_user?email=$email'),
+      Uri.parse('http://192.168.166.58:5000/get_user?email=$email'),
     );
 
     print("Response from get_user: ${response.body}");

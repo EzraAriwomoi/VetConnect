@@ -68,7 +68,7 @@ class _AddAnimalDialogState extends State<AddAnimalDialog> {
   }
 
   Future<String?> _uploadImageToCloudinary(File imageFile) async {
-    var uri = Uri.parse('http://192.168.201.58:5000/upload_image');
+    var uri = Uri.parse('http://192.168.166.58:5000/upload_image');
     var request = http.MultipartRequest('POST', uri);
     request.files
         .add(await http.MultipartFile.fromPath('image', imageFile.path));
@@ -338,7 +338,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
     print("Fetching user ID for: $email");
 
     final response = await http.get(
-      Uri.parse('http://192.168.201.58:5000/get_user?email=$email'),
+      Uri.parse('http://192.168.166.58:5000/get_user?email=$email'),
     );
 
     print("Response from get_user: ${response.body}");
@@ -363,7 +363,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
   Future<List<Map<String, dynamic>>> fetchFavorites(int ownerId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.201.58:5000/get_favorites?owner_id=$ownerId'),
+        Uri.parse('http://192.168.166.58:5000/get_favorites?owner_id=$ownerId'),
       );
 
       print("Raw Favorites Response: ${response.body}");
@@ -396,7 +396,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
   Future<void> removeFavorite(int ownerId, int vetId) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://192.168.201.58:5000/remove_favorite'),
+        Uri.parse('http://192.168.166.58:5000/remove_favorite'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"owner_id": ownerId, "veterinarian_id": vetId}),
       );
@@ -440,7 +440,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
       String color,
       String imageUrl,
       int ownerId) async {
-    final url = Uri.parse('http://192.168.201.58:5000/register_animal');
+    final url = Uri.parse('http://192.168.166.58:5000/register_animal');
 
     final response = await http.post(
       url,
@@ -471,7 +471,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
     if (user != null) {
       try {
         final response = await http.get(
-          Uri.parse("http://192.168.201.58:5000/get_user?email=${user.email}"),
+          Uri.parse("http://192.168.166.58:5000/get_user?email=${user.email}"),
         );
 
         if (response.statusCode == 200) {
@@ -489,7 +489,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
 
   Future<void> fetchAnimals(int ownerId) async {
     final url =
-        Uri.parse("http://192.168.201.58:5000/get_animals?owner_id=$ownerId");
+        Uri.parse("http://192.168.166.58:5000/get_animals?owner_id=$ownerId");
 
     final response = await http.get(url);
 
@@ -728,7 +728,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
                       try {
                         final response = await http.get(
                           Uri.parse(
-                              "http://192.168.201.58:5000/get_user?email=${user.email}"),
+                              "http://192.168.166.58:5000/get_user?email=${user.email}"),
                         );
 
                         if (response.statusCode == 200) {
@@ -804,7 +804,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
                             try {
                               final response = await http.get(
                                 Uri.parse(
-                                    "http://192.168.201.58:5000/get_user?email=${user.email}"),
+                                    "http://192.168.166.58:5000/get_user?email=${user.email}"),
                               );
 
                               if (response.statusCode == 200) {
