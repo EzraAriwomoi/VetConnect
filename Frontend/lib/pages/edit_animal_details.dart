@@ -104,7 +104,7 @@ class _EditAnimalDialogState extends State<EditAnimalDialog> {
   }
 
   final url = Uri.parse(
-      'http://192.168.166.58:5000/update_animal/${widget.animal['id']}');
+      'http://192.168.107.58:5000/update_animal/${widget.animal['id']}');
 
   final response = await http.put(
     url,
@@ -150,7 +150,7 @@ class _EditAnimalDialogState extends State<EditAnimalDialog> {
 
   Future<String> _uploadImageToServer(File imageFile) async {
     var request = http.MultipartRequest(
-        'POST', Uri.parse('http://192.168.166.58:5000/upload_image'));
+        'POST', Uri.parse('http://192.168.107.58:5000/upload_image'));
 
     request.files
         .add(await http.MultipartFile.fromPath('image', imageFile.path));

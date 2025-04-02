@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchVeterinarians() async {
     try {
       final response =
-          await http.get(Uri.parse('http://192.168.166.58:5000/veterinarians'));
+          await http.get(Uri.parse('http://192.168.107.58:5000/veterinarians'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.166.58:5000/get_user?email=$email'),
+        Uri.parse('http://192.168.107.58:5000/get_user?email=$email'),
       );
 
       print("Response from get_user: ${response.body}");
@@ -128,7 +128,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.166.58:5000/add_favorite'),
+        Uri.parse('http://192.168.107.58:5000/add_favorite'),
         headers: {"Content-Type": "application/json"},
         body:
             jsonEncode({"owner_id": loggedInUserId, "veterinarian_id": vetId}),
@@ -170,7 +170,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final response = await http.delete(
-        Uri.parse('http://192.168.166.58:5000/remove_favorite'),
+        Uri.parse('http://192.168.107.58:5000/remove_favorite'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "owner_id": loggedInUserId,
@@ -207,7 +207,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchFavorites(int ownerId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.166.58:5000/get_favorites?owner_id=$ownerId'),
+        Uri.parse('http://192.168.107.58:5000/get_favorites?owner_id=$ownerId'),
       );
 
       if (response.statusCode == 200) {
@@ -233,7 +233,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.166.58:5000/get_user?email=${user.email}"),
+        Uri.parse("http://192.168.107.58:5000/get_user?email=${user.email}"),
       );
 
       if (response.statusCode == 200) {

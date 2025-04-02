@@ -6,6 +6,7 @@ import 'package:vetconnect/components/extension/custom_theme.dart';
 import 'package:vetconnect/components/controls/bottom_navigations.dart';
 import 'package:vetconnect/pages/registration/forgot_password.dart';
 import 'package:vetconnect/pages/registration/selection_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -24,87 +25,170 @@ class _LoginPageState extends State<LoginPage> {
   int? loggedInUserId;
   String? loggedInUserType;
 
-  Future<void> _login() async {
-    setState(() {
-      _isEmailValid = _emailController1.text.isNotEmpty &&
-          RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-              .hasMatch(_emailController1.text);
-      _isPasswordValid = _passwordController1.text.isNotEmpty;
-    });
+  // Future<void> _login() async {
+  //   setState(() {
+  //     _isEmailValid = _emailController1.text.isNotEmpty &&
+  //         RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+  //             .hasMatch(_emailController1.text);
+  //     _isPasswordValid = _passwordController1.text.isNotEmpty;
+  //   });
 
-    if (!_isEmailValid || !_isPasswordValid) {
+  //   if (!_isEmailValid || !_isPasswordValid) {
+  //     return;
+  //   }
+
+  //   setState(() {
+  //     _isLoading = true;
+  //   });
+
+  //   final response = await http.post(
+  //     Uri.parse('http://192.168.107.58:5000/login'),
+  //     headers: {'Content-Type': 'application/json'},
+  //     body: jsonEncode({
+  //       'email': _emailController1.text,
+  //       'password': _passwordController1.text,
+  //     }),
+  //   );
+
+  //   final data = jsonDecode(response.body);
+
+  //   if (response.statusCode == 200) {
+  //     String userType = data['user_type'];
+  //     await fetchUserId(_emailController1.text);
+
+  //     if (loggedInUserId == null) {
+  //       print("Fetch user ID failed! Cannot proceed.");
+  //       return;
+  //     }
+
+  //     try {
+  //       await FirebaseAuth.instance.signInWithEmailAndPassword(
+  //         email: _emailController1.text,
+  //         password: _passwordController1.text,
+  //       );
+
+  //       print(
+  //           "Logged-in Firebase User: ${FirebaseAuth.instance.currentUser?.email}");
+
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content:
+  //               Text("Login successful", style: TextStyle(color: Colors.white)),
+  //           backgroundColor: const Color.fromARGB(255, 54, 155, 58),
+  //           duration: Duration(seconds: 2),
+  //         ),
+  //       );
+
+  //       await Future.delayed(Duration(seconds: 2));
+
+  //       if (userType == 'animal_owner' || userType == 'veterinarian') {
+  //         Navigator.pushReplacement(
+  //           context,
+  //           MaterialPageRoute(
+  //             builder: (context) => BottomNavigations(userType: userType),
+  //           ),
+  //         );
+  //       }
+  //     } catch (firebaseError) {
+  //       print("Firebase Authentication Error: $firebaseError");
+  //     }
+  //   } else {
+  //     print("MySQL login failed: ${data['message']}");
+  //   }
+
+  //   setState(() {
+  //     _isLoading = false;
+  //   });
+  // }
+
+  Future<void> _login() async {
+  setState(() {
+    _isEmailValid = _emailController1.text.isNotEmpty &&
+        RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+            .hasMatch(_emailController1.text);
+    _isPasswordValid = _passwordController1.text.isNotEmpty;
+  });
+
+  if (!_isEmailValid || !_isPasswordValid) {
+    return;
+  }
+
+  setState(() {
+    _isLoading = true;
+  });
+
+  final response = await http.post(
+    Uri.parse('http://192.168.107.58:5000/login'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'email': _emailController1.text,
+      'password': _passwordController1.text,
+    }),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    String userType = data['user_type'];
+    String token = data['access_token'];
+
+    await fetchUserId(_emailController1.text);
+
+    if (loggedInUserId == null) {
+      print("Fetch user ID failed! Cannot proceed.");
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    try {
+      // Firebase authentication
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController1.text,
+        password: _passwordController1.text,
+      );
 
-    final response = await http.post(
-      Uri.parse('http://192.168.166.58:5000/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': _emailController1.text,
-        'password': _passwordController1.text,
-      }),
-    );
+      print("Logged-in Firebase User: ${FirebaseAuth.instance.currentUser?.email}");
 
-    final data = jsonDecode(response.body);
+      // Store JWT token and user details
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token);
+      await prefs.setString('userType', userType);
+      await prefs.setInt('userId', data['user_id']);
 
-    if (response.statusCode == 200) {
-      String userType = data['user_type'];
-      await fetchUserId(_emailController1.text);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Login successful", style: TextStyle(color: Colors.white)),
+          backgroundColor: const Color.fromARGB(255, 54, 155, 58),
+          duration: Duration(seconds: 2),
+        ),
+      );
 
-      if (loggedInUserId == null) {
-        print("Fetch user ID failed! Cannot proceed.");
-        return;
-      }
+      await Future.delayed(Duration(seconds: 2));
 
-      try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController1.text,
-          password: _passwordController1.text,
-        );
-
-        print(
-            "Logged-in Firebase User: ${FirebaseAuth.instance.currentUser?.email}");
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text("Login successful", style: TextStyle(color: Colors.white)),
-            backgroundColor: const Color.fromARGB(255, 54, 155, 58),
-            duration: Duration(seconds: 2),
+      if (userType == 'animal_owner' || userType == 'veterinarian') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BottomNavigations(userType: userType),
           ),
         );
-
-        await Future.delayed(Duration(seconds: 2));
-
-        if (userType == 'animal_owner' || userType == 'veterinarian') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BottomNavigations(userType: userType),
-            ),
-          );
-        }
-      } catch (firebaseError) {
-        print("Firebase Authentication Error: $firebaseError");
       }
-    } else {
-      print("MySQL login failed: ${data['message']}");
+    } catch (firebaseError) {
+      print("Firebase Authentication Error: $firebaseError");
     }
-
-    setState(() {
-      _isLoading = false;
-    });
+  } else {
+    print("MySQL login failed: ${data['message']}");
   }
+
+  setState(() {
+    _isLoading = false;
+  });
+}
 
   Future<void> fetchUserId(String email) async {
     print("Fetching user ID for: $email");
 
     final response = await http.get(
-      Uri.parse('http://192.168.166.58:5000/get_user?email=$email'),
+      Uri.parse('http://192.168.107.58:5000/get_user?email=$email'),
     );
 
     print("Response from get_user: ${response.body}");

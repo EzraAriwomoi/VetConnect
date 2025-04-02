@@ -82,7 +82,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
     try {
       final response = await http.get(
         Uri.parse(
-            "http://192.168.166.58:5000/get_vet_name?vet_id=${widget.vetId}"),
+            "http://192.168.107.58:5000/get_vet_name?vet_id=${widget.vetId}"),
       );
 
       if (response.statusCode == 200) {
@@ -131,7 +131,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.166.58:5000/add_favorite'),
+        Uri.parse('http://192.168.107.58:5000/add_favorite'),
         headers: {"Content-Type": "application/json"},
         body:
             jsonEncode({"owner_id": loggedInUserId, "veterinarian_id": vetId}),
@@ -173,7 +173,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
 
     try {
       final response = await http.delete(
-        Uri.parse('http://192.168.166.58:5000/remove_favorite'),
+        Uri.parse('http://192.168.107.58:5000/remove_favorite'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "owner_id": loggedInUserId,
@@ -210,7 +210,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
   Future<void> fetchFavorites(int ownerId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.166.58:5000/get_favorites?owner_id=$ownerId'),
+        Uri.parse('http://192.168.107.58:5000/get_favorites?owner_id=$ownerId'),
       );
 
       if (response.statusCode == 200) {
@@ -236,7 +236,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
 
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.166.58:5000/get_user?email=${user.email}"),
+        Uri.parse("http://192.168.107.58:5000/get_user?email=${user.email}"),
       );
 
       if (response.statusCode == 200) {
@@ -254,7 +254,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
     try {
       final response = await http.get(
         Uri.parse(
-            "http://192.168.166.58:5000/get_reviews?vet_id=${widget.vetId}"),
+            "http://192.168.107.58:5000/get_reviews?vet_id=${widget.vetId}"),
       );
 
       if (response.statusCode == 200) {
@@ -309,7 +309,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.166.58:5000/submit_review'),
+        Uri.parse('http://192.168.107.58:5000/submit_review'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "veterinarian_id": widget.vetId,

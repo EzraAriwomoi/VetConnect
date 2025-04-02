@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
 import bcrypt
 from firebase_admin import auth
-from flask import Blueprint, jsonify, request, url_for
+import json
+from flask import Blueprint, Config, Flask, jsonify, request, session, url_for
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt, get_jwt_identity, JWTManager
+from werkzeug.security import check_password_hash
 from flask_cors import CORS
-from app.models import Animal, AnimalOwner, Appointment, FavoriteVeterinarian, Review, Veterinarian
+from app.models import Animal, AnimalOwner, Appointment, FavoriteVeterinarian, Notification, Review, UserActivity, Veterinarian
 from app.services.auth_service import register_user, login_user
 from app import db
 import secrets
@@ -15,6 +18,15 @@ import cloudinary.uploader
 
 auth_bp = Blueprint('auth_bp', __name__)
 CORS(auth_bp)
+
+blacklisted_tokens = set()
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+app.config['SECRET_KEY'] = 'your_secret_key_here'
+app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key_here'
+jwt = JWTManager(app)
 
 def get_mysql_connection():
     return mysql.connector.connect(
@@ -42,21 +54,37 @@ def register_animal_owner():
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
 
-    data = request.get_json()
-    response, status_code = register_user('animal_owner')
+    try:
+        data = request.get_json()
+        print(f"Received data: {data}")
 
-    if status_code == 201:
-        try:
-            user = auth.create_user(
-                email=data['email'],
-                password=data['password'],
-                display_name=data['name']
-            )
-            print(f"Firebase user created: {user.uid}")
-        except Exception as e:
-            print(f"Error creating Firebase user: {e}")
+        if not data:
+            return jsonify({'message': 'Request body is missing'}), 400
 
-    return response, status_code
+        required_fields = ["name", "email", "password", "phone", "location"]
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'message': f'Missing field: {field}'}), 400
+
+        response, status_code = register_user('animal_owner')
+
+        if status_code == 201:
+            try:
+                user = auth.create_user(
+                    email=data['email'],
+                    password=data['password'],
+                    display_name=data['name']
+                )
+                print(f"Firebase user created: {user.uid}")
+            except Exception as e:
+                print(f"Error creating Firebase user: {e}")
+                return jsonify({'message': f'Firebase error: {str(e)}'}), 500
+
+        return response, status_code
+
+    except Exception as e:
+        print(f"Error in register_animal_owner: {e}")
+        return jsonify({'message': 'Internal server error'}), 500
 
 
 @auth_bp.route('/register/veterinarian', methods=['POST', 'OPTIONS'])
@@ -102,14 +130,14 @@ def get_veterinarians():
 
 @auth_bp.route('/get_vet_name', methods=['GET'])
 def get_vet_name():
-    vet_id = request.args.get('vet_id', type=int)
-    if not vet_id:
+    vet_email = request.args.get('vet_id')
+    if not vet_email:
         return jsonify({"error": "Missing vet_id"}), 400
 
     conn = get_mysql_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT id, name, specialization FROM Veterinarian WHERE id = %s", (vet_id,))
+    cursor.execute("SELECT id, name, specialization FROM Veterinarian WHERE email = %s", (vet_email,))
     vet = cursor.fetchone()
     conn.close()
 
@@ -125,11 +153,72 @@ def get_vet_name():
         return jsonify({"error": "Vet not found"}), 404
 
 
-@auth_bp.route('/login', methods=['POST', 'OPTIONS'])
-def login():
-    if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
-    return login_user()
+# @auth_bp.route('/login', methods=['POST', 'OPTIONS'])
+# def login():
+#     if request.method == 'OPTIONS':
+#         return _build_cors_preflight_response()
+#     return login_user()
+
+@auth_bp.route('/protected', methods=['GET'])
+@jwt_required()
+def protected():
+    current_user = json.loads(get_jwt_identity())
+    return jsonify({'message': 'Access granted', 'user': current_user}), 200
+
+
+@auth_bp.route('/login', methods=['POST'])
+def login_user():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    # Try to find the user in AnimalOwner table
+    user = AnimalOwner.query.filter_by(email=email).first()
+    user_type = "animal_owner"
+
+    # If user is not found, check the Veterinarian table
+    if not user:
+        user = Veterinarian.query.filter_by(email=email).first()
+        user_type = "veterinarian"
+
+    if user and check_password_hash(user.password, password):
+        identity_str = json.dumps({'user_id': user.id, 'user_type': user_type})  
+        access_token = create_access_token(identity=identity_str)  
+
+        return jsonify({
+            'message': 'Login successful',
+            'access_token': access_token,
+            'user_id': user.id,
+            'user_type': user_type,
+            'name': user.name
+        }), 200
+
+    return jsonify({'message': 'Invalid credentials. Please try again'}), 401
+
+
+@jwt.token_in_blocklist_loader
+def check_if_token_is_revoked(jwt_header, jwt_payload):
+    jti = jwt_payload['jti']
+    return jti in blacklisted_tokens
+
+
+@auth_bp.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    try:
+        identity = get_jwt_identity()
+        identity_dict = json.loads(identity)
+
+        jti = get_jwt()["jti"]
+        blacklisted_tokens.add(jti)
+
+        print(f"User {identity_dict} logged out, JTI: {jti}")
+        return jsonify({'message': 'Successfully logged out'}), 200
+
+    except Exception as e:
+        print(f"Logout Error: {e}")
+        return jsonify({'message': 'Logout failed', 'error': str(e)}), 400
+
 
 def _build_cors_preflight_response():
     response = jsonify({'message': 'CORS preflight success'})
@@ -733,3 +822,66 @@ def get_reviews():
         })
 
     return jsonify(review_list), 200
+
+@auth_bp.route("/user_activity/<int:user_id>", methods=["GET"])
+def get_user_activity(user_id):
+    """Fetch user activity including appointments, reviews, favorites, and animal registrations."""
+    
+    # Check if user exists
+    owner = AnimalOwner.query.get(user_id)
+    veterinarian = Veterinarian.query.get(user_id)
+
+    if not owner and not veterinarian:
+        return jsonify({"error": "User not found"}), 404
+
+    user_name = owner.name if owner else veterinarian.name
+    user_email = owner.email if owner else veterinarian.email
+
+    # Fetch user activity
+    appointments = Appointment.query.filter_by(owner_id=user_id).all()
+    reviews = Review.query.filter_by(owner_id=user_id).all()
+    favorites = FavoriteVeterinarian.query.filter_by(owner_id=user_id).all()
+    notifications = Notification.query.filter_by(user_id=user_id).all()
+
+    # Fetch animal registration activities without filtering by `user_type`
+    registrations = UserActivity.query.filter_by(user_id=user_id, activity_type='animal_registration').all()
+    appointment_activities = UserActivity.query.filter_by(user_id=user_id, activity_type='appointment').all()
+    review_activities = UserActivity.query.filter_by(user_id=user_id, activity_type='review').all()
+
+    # Convert data to JSON format
+    activity_data = {
+        "name": user_name,
+        "email": user_email,
+        "activities": [
+            *[
+                {"type": "Appointment", "description": a.status, "timestamp": a.date.isoformat()}
+                for a in appointments
+            ],
+            *[
+                {"type": "Review", "description": r.review_text, "timestamp": r.created_at.isoformat()}
+                for r in reviews
+            ],
+            *[
+                {"type": "Favorite", "description": f"Favorited veterinarian {f.veterinarian_id}", "timestamp": "N/A"}
+                for f in favorites
+            ],
+            *[
+                {"type": "Notification", "description": n.title, "timestamp": n.timestamp.isoformat()}
+                for n in notifications
+            ],
+            *[
+                {"type": "Animal Registration", "description": reg.description, "timestamp": reg.timestamp.isoformat()}
+                for reg in registrations
+            ],
+            *[
+                {"type": "Appointment Activity", "description": a.description, "timestamp": a.timestamp.isoformat()}
+                for a in appointment_activities
+            ],
+            *[
+                {"type": "Review Activity", "description": r.description, "timestamp": r.timestamp.isoformat()}
+                for r in review_activities
+            ],
+        ]
+    }
+
+    return jsonify(activity_data), 200

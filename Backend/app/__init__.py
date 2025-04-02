@@ -20,7 +20,10 @@ def create_app():
     migrate.init_app(app, db)
 
     from app.routes.auth_routes import auth_bp
+    from app.routes.api_routes import api_bp
+    
     app.register_blueprint(auth_bp)
+    app.register_blueprint(api_bp, url_prefix='/api')
 
     with app.app_context():
         db.create_all()

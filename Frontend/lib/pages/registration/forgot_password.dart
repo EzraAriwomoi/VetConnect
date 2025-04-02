@@ -29,7 +29,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       _isLoading = true;
     });
 
-    final url = Uri.parse('http://192.168.166.58:5000/forgot_password');
+    final url = Uri.parse('http://192.168.107.58:5000/forgot_password');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

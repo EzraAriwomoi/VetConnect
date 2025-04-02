@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
 class SelectVeterinarianScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
   }
 
   Future<void> fetchVeterinarians() async {
-    final url = Uri.parse('http://192.168.166.58:5000/get_veterinarians');
+    final url = Uri.parse('http://192.168.107.58:5000/get_veterinarians');
 
     try {
       setState(() {
@@ -304,12 +305,20 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () {
-              Navigator.pop(context, {
-                'chatRoomId': vet['email'],
-                'vetName': "Dr. ${vet['name']}",
-                'vetImage': vet['profileImage'],
-              });
-            },
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null || currentUser.email == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Please sign in to start chatting'))
+    );
+    return;
+  }
+
+  Navigator.pop(context, {
+    'vetEmail': vet['email'], // Pass the vet's email separately
+    'vetName': "Dr. ${vet['name']}",
+    'vetImage': vet['profileImage'],
+  });
+},
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -454,12 +463,20 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
                           children: [
                             ElevatedButton.icon(
                               onPressed: () {
-                                Navigator.pop(context, {
-                                  'chatRoomId': vet['email'],
-                                  'vetName': "Dr. ${vet['name']}",
-                                  'vetImage': vet['profileImage'],
-                                });
-                              },
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null || currentUser.email == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Please sign in to start chatting'))
+    );
+    return;
+  }
+
+  Navigator.pop(context, {
+    'vetEmail': vet['email'], // Pass the vet's email separately
+    'vetName': "Dr. ${vet['name']}",
+    'vetImage': vet['profileImage'],
+  });
+},
                               icon: Icon(Icons.chat_bubble_outline, size: 18),
                               label: Text('Start Chat'),
                               style: ElevatedButton.styleFrom(

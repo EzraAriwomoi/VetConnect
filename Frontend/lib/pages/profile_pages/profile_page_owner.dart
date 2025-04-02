@@ -7,6 +7,17 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:vetconnect/pages/animal_details_page.dart';
 import 'package:vetconnect/pages/doc_profile.dart';
+import 'package:vetconnect/pages/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'dart:typed_data';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:pdf/widgets.dart' as pw;
+import 'dart:html' as html;
+import 'dart:typed_data';
 
 class ProfilePageOwner extends StatefulWidget {
   @override
@@ -34,6 +45,7 @@ class _AddAnimalDialogState extends State<AddAnimalDialog> {
   String? _selectedSpecies;
   String? _selectedBreed;
   bool _isUploading = false;
+  Uint8List? _selectedImageBytes;
 
   final List<String> speciesList = ['Dog', 'Cat', 'Bird', 'Reptile', 'Other'];
   final Map<String, List<String>> breedOptions = {
@@ -46,10 +58,22 @@ class _AddAnimalDialogState extends State<AddAnimalDialog> {
 
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await ImagePicker().pickImage(source: source);
+
     if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+      if (kIsWeb) {
+        // Web: Read image as bytes
+        final Uint8List webImage = await pickedFile.readAsBytes();
+        setState(() {
+          _selectedImageBytes = webImage; // Store Uint8List for web
+          _selectedImage = null; // Clear File for mobile
+        });
+      } else {
+        // Mobile: Use File
+        setState(() {
+          _selectedImage = File(pickedFile.path);
+          _selectedImageBytes = null; // Clear Uint8List for web
+        });
+      }
     }
   }
 
@@ -67,11 +91,18 @@ class _AddAnimalDialogState extends State<AddAnimalDialog> {
     }
   }
 
-  Future<String?> _uploadImageToCloudinary(File imageFile) async {
-    var uri = Uri.parse('http://192.168.166.58:5000/upload_image');
+  Future<String?> _uploadImageToCloudinary(dynamic image) async {
+    var uri = Uri.parse('http://192.168.107.58:5000/upload_image');
     var request = http.MultipartRequest('POST', uri);
-    request.files
-        .add(await http.MultipartFile.fromPath('image', imageFile.path));
+
+    if (image is File) {
+      // For mobile, upload the file
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+    } else if (image is Uint8List) {
+      // For web, upload the bytes
+      request.files.add(
+          http.MultipartFile.fromBytes('image', image, filename: 'image.jpg'));
+    }
 
     var response = await request.send();
     if (response.statusCode == 200) {
@@ -84,7 +115,7 @@ class _AddAnimalDialogState extends State<AddAnimalDialog> {
   }
 
   void _registerAnimal() async {
-    if (_selectedImage == null) {
+    if (_selectedImage == null && _selectedImageBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select an image")),
       );
@@ -95,7 +126,15 @@ class _AddAnimalDialogState extends State<AddAnimalDialog> {
       _isUploading = true;
     });
 
-    String? imageUrl = await _uploadImageToCloudinary(_selectedImage!);
+    String? imageUrl;
+
+    if (kIsWeb && _selectedImageBytes != null) {
+      // Web: Upload image as bytes
+      imageUrl = await _uploadImageToCloudinary(_selectedImageBytes!);
+    } else if (!kIsWeb && _selectedImage != null) {
+      // Mobile: Upload image as File
+      imageUrl = await _uploadImageToCloudinary(_selectedImage!);
+    }
 
     setState(() {
       _isUploading = false;
@@ -235,17 +274,22 @@ class _AddAnimalDialogState extends State<AddAnimalDialog> {
               SizedBox(height: 12),
 
               // Image Preview
-              _selectedImage != null
+              _selectedImage != null || _selectedImageBytes != null
                   ? Column(
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.file(_selectedImage!,
-                              height: 120, width: 120, fit: BoxFit.cover),
+                          child: _selectedImage != null // Mobile
+                              ? Image.file(_selectedImage!,
+                                  height: 120, width: 120, fit: BoxFit.cover)
+                              : Image.memory(_selectedImageBytes!,
+                                  height: 120, width: 120, fit: BoxFit.cover),
                         ),
                         TextButton(
-                          onPressed: () =>
-                              setState(() => _selectedImage = null),
+                          onPressed: () => setState(() {
+                            _selectedImage = null;
+                            _selectedImageBytes = null;
+                          }),
                           child: Text(
                             "Remove Image",
                             style: TextStyle(
@@ -338,7 +382,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
     print("Fetching user ID for: $email");
 
     final response = await http.get(
-      Uri.parse('http://192.168.166.58:5000/get_user?email=$email'),
+      Uri.parse('http://192.168.107.58:5000/get_user?email=$email'),
     );
 
     print("Response from get_user: ${response.body}");
@@ -363,7 +407,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
   Future<List<Map<String, dynamic>>> fetchFavorites(int ownerId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.166.58:5000/get_favorites?owner_id=$ownerId'),
+        Uri.parse('http://192.168.107.58:5000/get_favorites?owner_id=$ownerId'),
       );
 
       print("Raw Favorites Response: ${response.body}");
@@ -396,7 +440,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
   Future<void> removeFavorite(int ownerId, int vetId) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://192.168.166.58:5000/remove_favorite'),
+        Uri.parse('http://192.168.107.58:5000/remove_favorite'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"owner_id": ownerId, "veterinarian_id": vetId}),
       );
@@ -440,7 +484,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
       String color,
       String imageUrl,
       int ownerId) async {
-    final url = Uri.parse('http://192.168.166.58:5000/register_animal');
+    final url = Uri.parse('http://192.168.107.58:5000/register_animal');
 
     final response = await http.post(
       url,
@@ -471,7 +515,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
     if (user != null) {
       try {
         final response = await http.get(
-          Uri.parse("http://192.168.166.58:5000/get_user?email=${user.email}"),
+          Uri.parse("http://192.168.107.58:5000/get_user?email=${user.email}"),
         );
 
         if (response.statusCode == 200) {
@@ -489,7 +533,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
 
   Future<void> fetchAnimals(int ownerId) async {
     final url =
-        Uri.parse("http://192.168.166.58:5000/get_animals?owner_id=$ownerId");
+        Uri.parse("http://192.168.107.58:5000/get_animals?owner_id=$ownerId");
 
     final response = await http.get(url);
 
@@ -506,6 +550,145 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
       print("Failed to fetch animals: ${response.body}");
     }
   }
+
+  Future<void> _logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      print("No token found, logging out locally.");
+      _clearUserData();
+      _navigateToLogin(context);
+      return;
+    }
+
+    print("Sending logout request with token: $token");
+
+    final response = await http.post(
+      Uri.parse('http://192.168.107.58:5000/logout'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print("Successfully logged out from Flask backend.");
+      _clearUserData();
+      _navigateToLogin(context);
+    } else {
+      print("Logout failed: ${response.body}");
+    }
+  }
+
+  void _clearUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('userType');
+    await prefs.remove('userId');
+  }
+
+  void _navigateToLogin(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      print("Navigating to login page");
+
+      if (!context.mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+        (route) => false,
+      );
+    });
+  }
+
+  Future<void> _generateUserReport(BuildContext context, int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.107.58:5000/user_activity/$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("API Response: ${response.body}"); // Debugging
+
+        final List activities =
+            data['activities'] ?? []; // Ensure it's not null
+
+        final pdf = pw.Document();
+        pdf.addPage(
+          pw.Page(
+            build: (pw.Context context) => pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text("User Activity Report",
+                    style: pw.TextStyle(
+                        fontSize: 22, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 10),
+                pw.Text("Name: ${data['name'] ?? 'N/A'}"),
+                pw.Text("Email: ${data['email'] ?? 'N/A'}"),
+                pw.SizedBox(height: 10),
+                pw.Text("Activities:",
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                if (activities.isEmpty)
+                  pw.Text("No activities recorded.")
+                else
+                  ...activities.map((activity) => pw.Text(
+                        "- ${activity['type']}: ${activity['description']} on ${activity['timestamp']}",
+                      )),
+              ],
+            ),
+          ),
+        );
+
+        final Uint8List pdfBytes = await pdf.save();
+
+        final blob = html.Blob([pdfBytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute("download", "activities.pdf")
+          ..click();
+        html.Url.revokeObjectUrl(url);
+      } else {
+        print("Failed to fetch user activity. Status: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error generating report: $e");
+    }
+  }
+
+  /// Helper function to clear user data and redirect to login page
+  // Future<void> _clearUserData(BuildContext context) async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   await prefs.remove('token');
+  //   await prefs.remove('userType');
+  //   await prefs.remove('userId');
+
+  //   try {
+  //     // Firebase Sign Out
+  //     await FirebaseAuth.instance.signOut();
+  //     print("Firebase logout successful.");
+  //   } catch (firebaseError) {
+  //     print("Firebase logout error: $firebaseError");
+  //   }
+
+  //   // Show success message
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text("Logged out successfully",
+  //           style: TextStyle(color: Colors.white)),
+  //       backgroundColor: Colors.redAccent,
+  //       duration: Duration(seconds: 2),
+  //     ),
+  //   );
+
+  //   await Future.delayed(Duration(seconds: 2));
+
+  //   // Navigate back to the login screen
+  //   Navigator.pushReplacement(
+  //     context,
+  //     MaterialPageRoute(builder: (context) => const LoginPage()),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -529,10 +712,6 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
             onSelected: (value) {
               if (value == 'edit_profile') {
                 // Navigate to Edit Profile screen
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => EditProfileScreen()),
-                // );
               } else if (value == 'logout') {
                 showDialog(
                   context: context,
@@ -545,7 +724,10 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
                         child: Text('Cancel'),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _logout(context);
+                        },
                         child: Text('Logout',
                             style: TextStyle(
                               color: const Color.fromARGB(255, 250, 109, 99),
@@ -554,7 +736,13 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
                     ],
                   ),
                 );
-              } else if (value == 'help') {}
+              } else if (value == 'download_report') {
+                if (loggedInUserId != null) {
+                  _generateUserReport(context, loggedInUserId!);
+                } else {
+                  print("Error: User ID is null. Cannot generate report.");
+                }
+              }
             },
             itemBuilder: (BuildContext context) => [
               PopupMenuItem<String>(
@@ -564,6 +752,28 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
                     Icon(Icons.edit, color: Colors.black),
                     SizedBox(width: 10),
                     Text('Edit Profile'),
+                  ],
+                ),
+                height: 35,
+              ),
+              PopupMenuItem<String>(
+                value: 'help',
+                child: Row(
+                  children: [
+                    Icon(Icons.help_outline, color: Colors.black),
+                    SizedBox(width: 10),
+                    Text('Help'),
+                  ],
+                ),
+                height: 35,
+              ),
+              PopupMenuItem<String>(
+                value: 'download_report',
+                child: Row(
+                  children: [
+                    Icon(Icons.file_download, color: Colors.black),
+                    SizedBox(width: 10),
+                    Text('Download Report'),
                   ],
                 ),
                 height: 35,
@@ -585,19 +795,11 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
                 ),
                 height: 35,
               ),
-              PopupMenuItem<String>(
-                value: 'help',
-                child: Row(
-                  children: [
-                    Icon(Icons.help_outline, color: Colors.black),
-                    SizedBox(width: 10),
-                    Text('Help'),
-                  ],
-                ),
-                height: 35,
-              ),
             ],
-            icon: const Icon(Icons.settings, color: Colors.black,),
+            icon: const Icon(
+              Icons.settings,
+              color: Colors.black,
+            ),
             tooltip: 'Settings',
             offset: Offset(0, 40),
             shape: RoundedRectangleBorder(
@@ -728,7 +930,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
                       try {
                         final response = await http.get(
                           Uri.parse(
-                              "http://192.168.166.58:5000/get_user?email=${user.email}"),
+                              "http://192.168.107.58:5000/get_user?email=${user.email}"),
                         );
 
                         if (response.statusCode == 200) {
@@ -775,7 +977,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  "assets/no_data.png",
+                  "no_data.png",
                   height: 150,
                 ),
                 const SizedBox(height: 10),
@@ -804,7 +1006,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
                             try {
                               final response = await http.get(
                                 Uri.parse(
-                                    "http://192.168.166.58:5000/get_user?email=${user.email}"),
+                                    "http://192.168.107.58:5000/get_user?email=${user.email}"),
                               );
 
                               if (response.statusCode == 200) {
@@ -1004,7 +1206,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  "assets/no_data.png",
+                  "no_data.png",
                   height: 150,
                 ),
                 const SizedBox(height: 10),

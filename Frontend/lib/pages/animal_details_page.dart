@@ -112,7 +112,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage>
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.166.58:5000/get_specific_animal?animal_id=${widget.animalId}'),
+            'http://192.168.107.58:5000/get_specific_animal?animal_id=${widget.animalId}'),
       );
 
       if (response.statusCode == 200) {
@@ -134,7 +134,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage>
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.166.58:5000/get_appointments?animal_id=${widget.animal['id']}'),
+            'http://192.168.107.58:5000/get_appointments?animal_id=${widget.animal['id']}'),
       );
 
       if (response.statusCode == 200) {
@@ -161,7 +161,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage>
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.166.58:5000/get_animal_appointment_history?animal_id=${widget.animal['id']}'),
+            'http://192.168.107.58:5000/get_animal_appointment_history?animal_id=${widget.animal['id']}'),
       );
 
       if (response.statusCode == 200) {
@@ -189,7 +189,7 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage>
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.166.58:5000/get_animal_appointment_history?animal_id=${widget.animal['id']}'),
+            'http://192.168.107.58:5000/get_animal_appointment_history?animal_id=${widget.animal['id']}'),
       );
 
       if (response.statusCode == 200) {

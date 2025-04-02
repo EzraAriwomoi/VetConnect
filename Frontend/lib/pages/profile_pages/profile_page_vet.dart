@@ -31,7 +31,7 @@ class _ProfilePageVetState extends State<ProfilePageVet>
     if (user == null) return;
 
     final response = await http.get(
-      Uri.parse('http://192.168.166.58:5000/get_user?email=${user.email}'),
+      Uri.parse('http://192.168.107.58:5000/get_user?email=${user.email}'),
     );
 
     if (response.statusCode == 200) {
@@ -50,7 +50,7 @@ class _ProfilePageVetState extends State<ProfilePageVet>
   if (loggedInVetId == null) return;
 
   final response = await http.get(
-    Uri.parse('http://192.168.166.58:5000/get_vet_appointments?veterinarian_id=$loggedInVetId'),
+    Uri.parse('http://192.168.107.58:5000/get_vet_appointments?veterinarian_id=$loggedInVetId'),
   );
 
   if (response.statusCode == 200) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
@@ -25,11 +26,13 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String vetName = "Loading...";
+  StreamSubscription<QuerySnapshot>? _messagesSubscription;
 
   @override
   void initState() {
     super.initState();
     _fetchVetName();
+    _setupMessagesStream();
     _messageFocusNode.addListener(() {
       if (_messageFocusNode.hasFocus) {
         setState(() => _showEmojiPicker = false);
@@ -39,9 +42,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _fetchVetName() async {
     try {
+      String vetEmail = widget.vetName + "@gmail.com";
       final response = await http.get(
-        Uri.parse(
-            'http://192.168.166.58:5000/get_vet_name?vet_id=${widget.chatRoomId}'),
+        Uri.parse('http://192.168.107.58:5000/get_vet_name?vet_id=$vetEmail'),
       );
 
       if (response.statusCode == 200) {
@@ -64,6 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _messageFocusNode.dispose();
     _messageController.dispose();
+    _messagesSubscription?.cancel();
     super.dispose();
   }
 
@@ -100,30 +104,78 @@ class _ChatScreenState extends State<ChatScreen> {
     return weekdays[weekday - 1];
   }
 
-  void _sendMessage(String recipientEmail) async {
+  String _getChatRoomId(String user1, String user2) {
+    List<String> emails = {user1, user2}.toList()
+      ..sort(); // Ensure sorted order
+    return emails.join('_');
+  }
+
+  Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
-    String senderEmail = currentUser.email!;
+    final messageText = _messageController.text.trim();
+    final chatRoomId = widget.chatRoomId; // Use the widget's chatRoomId
 
-    await _firestore
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final chatRoomRef = _firestore.collection('chatRooms').doc(chatRoomId);
+        final chatRoomDoc = await transaction.get(chatRoomRef);
+
+        if (!chatRoomDoc.exists) {
+          transaction.set(
+              chatRoomRef,
+              {
+                'participants': [currentUser.email!, widget.vetName],
+                'createdAt': FieldValue.serverTimestamp(),
+              },
+              SetOptions(merge: true));
+        }
+
+        transaction.update(chatRoomRef, {
+          'lastMessage': messageText,
+          'lastMessageTime': FieldValue.serverTimestamp(),
+          'lastMessageSender': currentUser.email!,
+        });
+
+        final messageRef = chatRoomRef.collection('messages').doc();
+        transaction.set(messageRef, {
+          'senderId': currentUser.uid,
+          'senderEmail': currentUser.email!,
+          'text': messageText,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      });
+
+      _messageController.clear();
+      setState(() => _isTyping = false);
+    } catch (e) {
+      print('Error sending message: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send message: ${e.toString()}')));
+    }
+  }
+
+  void _setupMessagesStream() {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    _messagesSubscription = _firestore
         .collection('chatRooms')
-        .doc(senderEmail)
-        .collection(recipientEmail)
-        .doc('messages')
+        .doc(widget.chatRoomId)
         .collection('messages')
-        .add({
-      'senderId': currentUser.uid,
-      'senderEmail': senderEmail,
-      'text': _messageController.text.trim(),
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-
-    _messageController.clear();
-    setState(() {
-      _isTyping = false;
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        // Update last message in the chat room
+        _firestore.collection('chatRooms').doc(widget.chatRoomId).update({
+          'lastMessage': snapshot.docs.first['text'],
+          'lastMessageTime': snapshot.docs.first['timestamp'],
+        });
+      }
     });
   }
 
@@ -136,7 +188,7 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             CircleAvatar(
-              backgroundImage: AssetImage('assets/user_guide1.png'),
+              backgroundImage: AssetImage('default_profile.png'),
               radius: 18,
             ),
             const SizedBox(width: 10),
@@ -256,52 +308,57 @@ class _ChatScreenState extends State<ChatScreen> {
                 _buildWelcomeMessage(),
                 const SizedBox(height: 10),
                 Expanded(
-                    child: StreamBuilder(
-                  stream: _firestore
-                      .collection('chatRooms')
-                      .doc(_auth.currentUser?.email)
-                      .collection(widget.chatRoomId)
-                      .doc('messages')
-                      .collection('messages')
-                      .orderBy('timestamp', descending: true)
-                      .snapshots(),
-                  builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                    if (!snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-                    var messages = snapshot.data!.docs;
-                    return ListView.builder(
-                      reverse: true,
-                      padding: const EdgeInsets.all(10),
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        var message = messages[index];
-                        bool isSentByMe =
-                            message['senderId'] == _auth.currentUser?.uid;
+                  child: StreamBuilder(
+                    stream: _firestore
+                        .collection('chatRooms')
+                        .doc(widget.chatRoomId)
+                        .collection('messages')
+                        .orderBy('timestamp', descending: true)
+                        .snapshots(),
+                    builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                      if (!snapshot.hasData) {
+                        return Center(
+                            child: CircularProgressIndicator(
+                          color: Colors.lightBlue,
+                        ));
+                      }
+                      var messages = snapshot.data!.docs;
+                      return ListView.builder(
+                        reverse: true,
+                        padding: const EdgeInsets.all(10),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          var message = messages[index];
+                          bool isSentByMe =
+                              message['senderId'] == _auth.currentUser?.uid;
 
-                        Timestamp? timestamp =
-                            message['timestamp'] as Timestamp?;
-                        String formattedDate = formatTimestamp(timestamp);
+                          Timestamp? timestamp =
+                              message['timestamp'] as Timestamp?;
+                          String formattedDate = formatTimestamp(timestamp);
 
-                        bool showDateLabel = index == messages.length - 1 ||
-                            (index < messages.length - 1 &&
-                                formatTimestamp(messages[index + 1]['timestamp']
-                                        as Timestamp?) !=
-                                    formattedDate);
+                          bool showDateLabel = index == messages.length - 1 ||
+                              (index < messages.length - 1 &&
+                                  formatTimestamp(messages[index + 1]
+                                          ['timestamp'] as Timestamp?) !=
+                                      formattedDate);
 
-                        return Column(
-                          children: [
-                            if (showDateLabel) _buildDateLabel(formattedDate),
-                            isSentByMe
-                                ? _buildSentMessage("", message['text'])
-                                : _buildReceivedMessage("", message['text'],
-                                    message['senderEmail'] ?? "Unknown Sender"),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                )),
+                          return Column(
+                            children: [
+                              if (showDateLabel) _buildDateLabel(formattedDate),
+                              isSentByMe
+                                  ? _buildSentMessage("", message['text'])
+                                  : _buildReceivedMessage(
+                                      "",
+                                      message['text'],
+                                      message['senderEmail'] ??
+                                          "Unknown Sender"),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -467,7 +524,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: IconButton(
               icon: Icon(_isTyping ? Icons.send : Icons.mic,
                   color: Colors.lightBlue),
-              onPressed: _isTyping ? () => _sendMessage(widget.chatRoomId) : null,
+              onPressed: _isTyping ? _sendMessage : null,
             ),
           ),
         ],
@@ -490,8 +547,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _pickImageFromGallery() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-    }
+    if (pickedFile != null) {}
   }
 
   // Widget _buildImagePreview(File image) {

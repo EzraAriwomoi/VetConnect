@@ -50,6 +50,10 @@ dependencies:
   fl_chart: ^0.70.2
   location: ^8.0.0
   geolocator: ^13.0.3
+  path_provider: ^2.1.5
+  open_file: ^3.5.10
+  share_plus: ^10.1.4
+  pdf: ^3.11.3
 
 dev_dependencies:
   flutter_test:
@@ -84,6 +88,7 @@ flutter:
     - assets/user_location.png
     - assets/logo.png
     - assets/google_icon.png
+    - assets/no_data.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

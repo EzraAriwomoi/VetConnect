@@ -76,3 +76,59 @@ class Review(db.Model):
 
     veterinarian = db.relationship('Veterinarian', backref='reviews')
     owner = db.relationship('AnimalOwner', backref='reviews')
+
+class HelpDeskPost(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    user_type = db.Column(db.String(20), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    animal_type = db.Column(db.String(100), nullable=False)
+    image_url = db.Column(db.String(500), nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    likes = db.Column(db.Integer, default=0)
+    
+    comments = db.relationship('HelpDeskComment', backref='post', lazy=True, cascade='all, delete-orphan')
+
+class HelpDeskComment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('help_desk_post.id'), nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+    user_type = db.Column(db.String(20), nullable=False)
+    comment = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    user_type = db.Column(db.String(20), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # 'message', 'appointment', 'review', etc.
+    related_id = db.Column(db.String(100), nullable=True)  # ID of the related entity
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)
+
+class ReviewReply(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    review_id = db.Column(db.Integer, db.ForeignKey('review.id'), nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+    user_type = db.Column(db.String(20), nullable=False)  # 'animal_owner' or 'veterinarian'
+    reply_text = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    review = db.relationship('Review', backref='replies')
+
+class UserActivity(db.Model):
+    __tablename__ = 'user_activity'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)  # Can be an owner or veterinarian
+    user_type = db.Column(db.String(20), nullable=False)  # 'owner' or 'veterinarian'
+    activity_type = db.Column(db.String(50))  # e.g., 'animal_registration'
+    description = db.Column(db.String(255))   # A description of the activity
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<UserActivity {self.activity_type} for {self.user_type} {self.user_id}>"
+
