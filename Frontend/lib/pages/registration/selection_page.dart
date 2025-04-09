@@ -66,63 +66,64 @@ class _UserSelectionPageState extends State<UserSelectionPage> {
       body: SafeArea(
         child: Stack(
           children: [
-            Column(
-              children: [
-                PageHeader(
-                  title: 'Welcome to VetConnect',
-                  subtitle: 'Select the type of account to create...',
-                ),
-                SizedBox(height: 10),
-                Text(
-                  'Follow each STEP to get started with your account.',
-                  style: TextStyle(
-                    color: context.theme.subtitletext,
+            SingleChildScrollView(
+              // ADD THIS
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // ADD THIS
+                children: [
+                  PageHeader(
+                    title: 'Welcome to VetConnect',
+                    subtitle: 'Select the type of account to create...',
                   ),
-                ),
-                Spacer(),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    children: [
-                      // Veterinarian Option
-                      _buildUserOption(
-                        label: "Veterinarian",
-                        description: 'For veterinary professionals',
-                        value: 'veterinarian',
-                      ),
-                      SizedBox(height: 20),
-                      // Animal Owner Option
-                      _buildUserOption(
-                        label: "Animal Owner",
-                        description: 'For pet and livestock owners',
-                        value: 'Owner',
-                      ),
-                    ],
+                  SizedBox(height: 10),
+                  Text(
+                    'Follow each STEP to get started with your account.',
+                    style: TextStyle(
+                      color: context.theme.subtitletext,
+                    ),
                   ),
-                ),
-                SizedBox(height: 45),
-                // Proceed Button
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _proceed,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.theme.primecolor,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                  SizedBox(height: 20), // Add spacing
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      children: [
+                        _buildUserOption(
+                          label: "Veterinarian",
+                          description: 'For veterinary professionals',
+                          value: 'veterinarian',
                         ),
-                      ),
-                      child: Text(
-                        'Proceed',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                        SizedBox(height: 20),
+                        _buildUserOption(
+                          label: "Animal Owner",
+                          description: 'For pet and livestock owners',
+                          value: 'Owner',
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 30),
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _proceed,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.theme.primecolor,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Proceed',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             Positioned(
               top: 10,

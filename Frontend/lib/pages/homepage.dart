@@ -382,20 +382,20 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.lightBlue,
         elevation: _showAppBarTitle ? 4 : 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.search_rounded),
-            tooltip: 'Search',
-            iconSize: 24,
-            color: const Color.fromARGB(255, 39, 39, 39),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("Search feature coming soon!"),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-          ),
+          // IconButton(
+          //   icon: Icon(Icons.search_rounded),
+          //   tooltip: 'Search',
+          //   iconSize: 24,
+          //   color: const Color.fromARGB(255, 39, 39, 39),
+          //   onPressed: () {
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       SnackBar(
+          //         content: Text("Search feature coming soon!"),
+          //         behavior: SnackBarBehavior.floating,
+          //       ),
+          //     );
+          //   },
+          // ),
           IconButton(
             icon: Icon(Icons.calendar_today),
             tooltip: 'Appointments',
@@ -848,14 +848,14 @@ class _HomePageState extends State<HomePage> {
                             size: 16,
                             color: Colors.redAccent,
                           ),
-                          SizedBox(width: 4),
-                          Text(
-                            "2.5 km", // Sample distance
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
+                          // SizedBox(width: 4),
+                          // Text(
+                          //   "2.5 km", // Sample distance
+                          //   style: TextStyle(
+                          //     fontSize: 14,
+                          //     color: Colors.grey[600],
+                          //   ),
+                          // ),
                         ],
                       ),
                     ],

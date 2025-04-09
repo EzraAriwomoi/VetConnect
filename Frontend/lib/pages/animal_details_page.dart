@@ -648,12 +648,12 @@ class _AnimalDetailsPageState extends State<AnimalDetailsPage>
             onPressed: () {
               Navigator.of(context).pop();
               // Simulate deletion
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("Delete functionality coming soon"),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              // ScaffoldMessenger.of(context).showSnackBar(
+              //   SnackBar(
+              //     content: Text("Delete functionality coming soon"),
+              //     behavior: SnackBarBehavior.floating,
+              //   ),
+              // );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

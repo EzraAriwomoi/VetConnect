@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:vetconnect/components/Header/page_header.dart';
 import 'package:vetconnect/components/extension/custom_theme.dart';
 import './create_password.dart';
@@ -43,7 +44,7 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: context.theme.curvedpartcolor,
+        backgroundColor: Colors.lightBlue,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
@@ -110,48 +111,51 @@ class _VeterinarianRegisterPageState extends State<VeterinarianRegisterPage> {
   }
 
   Widget _buildTextField(TextEditingController controller, String label,
-      {TextInputType? keyboardType,
-      bool required = false,
-      bool email = false,
-      bool nationalID = false}) {
-    return TextFormField(
-      controller: controller,
-      style: TextStyle(fontSize: 18),
-      cursorColor: context.theme.primecolor,
-      cursorHeight: 18,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(fontSize: 17, color: context.theme.subtitletext),
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
-        ),
+    {TextInputType? keyboardType,
+    bool required = false,
+    bool email = false,
+    bool nationalID = false}) {
+  return TextFormField(
+    controller: controller,
+    style: TextStyle(fontSize: 18),
+    cursorColor: context.theme.primecolor,
+    cursorHeight: 18,
+    keyboardType: keyboardType,
+    inputFormatters: nationalID
+        ? [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(8)]
+        : null, // Limits to 8 digits and allows only numbers
+    decoration: InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(fontSize: 17, color: context.theme.subtitletext),
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10.0),
+        borderSide: BorderSide(color: context.theme.primecolor),
       ),
-      validator: (value) {
-        if (required && (value == null || value.isEmpty)) {
-          return 'This field is required';
-        }
-        if (email &&
-            value != null &&
-            !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-                .hasMatch(value)) {
-          return 'Enter a valid email';
-        }
-        if (nationalID &&
-            value != null &&
-            (value.length != 8 || !RegExp(r'^\d{8}$').hasMatch(value))) {
-          return 'National ID must be exactly 8 digits';
-        }
-        return null;
-      },
-    );
-  }
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10.0),
+        borderSide: BorderSide(color: context.theme.primecolor, width: 2.0),
+      ),
+    ),
+    validator: (value) {
+      if (required && (value == null || value.isEmpty)) {
+        return 'This field is required';
+      }
+      if (email &&
+          value != null &&
+          !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+              .hasMatch(value)) {
+        return 'Enter a valid email';
+      }
+      if (nationalID &&
+          value != null &&
+          (value.length != 8 || !RegExp(r'^\d{8}$').hasMatch(value))) {
+        return 'National ID must be exactly 8 digits';
+      }
+      return null;
+    },
+  );
+}
 
   Widget _buildSpecializationDropdown() {
     return Container(

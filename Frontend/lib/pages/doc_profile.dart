@@ -843,24 +843,24 @@ class _DoctorProfilePageState extends State<DoctorProfilePage>
             ),
           ],
         ),
-        SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildServiceCard(
-                "Request a Call",
-                Icons.phone,
-                Colors.red.shade100,
-                Colors.red.shade900,
-                () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Call request feature coming soon")),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+        // SizedBox(height: 12),
+        // Row(
+        //   children: [
+        //     Expanded(
+        //       child: _buildServiceCard(
+        //         "Request a Call",
+        //         Icons.phone,
+        //         Colors.red.shade100,
+        //         Colors.red.shade900,
+        //         () {
+        //           ScaffoldMessenger.of(context).showSnackBar(
+        //             SnackBar(content: Text("Call request feature coming soon")),
+        //           );
+        //         },
+        //       ),
+        //     ),
+        //   ],
+        // ),
       ],
     );
   }

@@ -7,6 +7,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:vetconnect/pages/payment_page.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
@@ -27,17 +28,41 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String vetName = "Loading...";
   StreamSubscription<QuerySnapshot>? _messagesSubscription;
+  bool _isConversationBlocked = false;
 
   @override
   void initState() {
     super.initState();
     _fetchVetName();
     _setupMessagesStream();
+    _checkAndUpdateConversationCount();
     _messageFocusNode.addListener(() {
       if (_messageFocusNode.hasFocus) {
         setState(() => _showEmojiPicker = false);
       }
     });
+  }
+
+  void _checkAndUpdateConversationCount() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    DocumentReference userRef =
+        _firestore.collection('users').doc(currentUser.uid);
+    DocumentSnapshot snapshot = await userRef.get();
+
+    if (snapshot.exists) {
+      int conversationCount = snapshot['conversationCount'] ?? 0;
+      print("Current conversation count: $conversationCount"); // Log count
+
+      if (conversationCount >= 5) {
+        _showPaymentPrompt();
+      } else {
+        await userRef.update({'conversationCount': conversationCount + 1});
+      }
+    } else {
+      await userRef.set({'conversationCount': 1});
+    }
   }
 
   Future<void> _fetchVetName() async {
@@ -60,6 +85,56 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         vetName = "Error Fetching Name";
       });
+    }
+  }
+
+  void _showPaymentPrompt() {
+    print("Prompt triggered!"); // Check if it's called
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Consultation Limit Reached"),
+        content: Text(
+            "You have exceeded 5 free conversations. Please make a payment to continue the consultation."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PaymentScreen()),
+              );
+            },
+            child: Text('Make Payment'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _processMpesaPayment() async {
+    final response = await http.post(
+      Uri.parse('http://192.168.107.58:5000/mpesa/payment'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        "amount": 100, // Amount to pay
+        "phone_number": "254715202539", // User phone number for payment
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final paymentResponse = json.decode(response.body);
+      print('Payment Response: $paymentResponse');
+      // Process the response here (e.g., show payment status)
+    } else {
+      print('Payment initiation failed');
     }
   }
 
@@ -106,7 +181,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String _getChatRoomId(String user1, String user2) {
     List<String> emails = {user1, user2}.toList()
-      ..sort(); // Ensure sorted order
+      ..sort();
     return emails.join('_');
   }
 
@@ -117,7 +192,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (currentUser == null) return;
 
     final messageText = _messageController.text.trim();
-    final chatRoomId = widget.chatRoomId; // Use the widget's chatRoomId
+    final chatRoomId = widget.chatRoomId;
 
     try {
       await _firestore.runTransaction((transaction) async {
@@ -151,6 +226,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
       _messageController.clear();
       setState(() => _isTyping = false);
+
+      // Check and update the conversation count after sending a message
+      _checkAndUpdateConversationCount();
     } catch (e) {
       print('Error sending message: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -459,7 +537,8 @@ class _ChatScreenState extends State<ChatScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-            top: BorderSide(color: const Color.fromARGB(255, 235, 235, 235))),
+          top: BorderSide(color: const Color.fromARGB(255, 235, 235, 235)),
+        ),
       ),
       child: Row(
         children: [
@@ -498,6 +577,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       onChanged: (text) =>
                           setState(() => _isTyping = text.isNotEmpty),
+                      enabled: !_isConversationBlocked, // Disable if blocked
                     ),
                   ),
                   IconButton(
@@ -524,7 +604,8 @@ class _ChatScreenState extends State<ChatScreen> {
             child: IconButton(
               icon: Icon(_isTyping ? Icons.send : Icons.mic,
                   color: Colors.lightBlue),
-              onPressed: _isTyping ? _sendMessage : null,
+              onPressed:
+                  _isConversationBlocked ? _showPaymentPrompt : _sendMessage,
             ),
           ),
         ],

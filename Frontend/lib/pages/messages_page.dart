@@ -296,7 +296,7 @@ class _MessagesPageState extends State<MessagesPage> {
                     name: displayName,
                     message: lastMessage,
                     time: formatTimestamp(lastMessageTime),
-                    imageUrl: "user_guide1.png",
+                    imageUrl: "default_profile.png",
                     isVerified: true,
                     showUnreadBadge: false,
                     chatRoomId: chatRoomId,

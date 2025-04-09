@@ -609,10 +609,10 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("API Response: ${response.body}"); // Debugging
+        print("API Response: ${response.body}");
 
         final List activities =
-            data['activities'] ?? []; // Ensure it's not null
+            data['activities'] ?? [];
 
         final pdf = pw.Document();
         pdf.addPage(
@@ -773,7 +773,7 @@ class _ProfilePageOwnerState extends State<ProfilePageOwner>
                   children: [
                     Icon(Icons.file_download, color: Colors.black),
                     SizedBox(width: 10),
-                    Text('Download Report'),
+                    Text('Report'),
                   ],
                 ),
                 height: 35,

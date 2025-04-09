@@ -1,9 +1,12 @@
+import base64
 from datetime import datetime, timedelta
 import bcrypt
 from firebase_admin import auth
+import os
 import json
 from flask import Blueprint, Config, Flask, jsonify, request, session, url_for
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt, get_jwt_identity, JWTManager
+import requests
 from werkzeug.security import check_password_hash
 from flask_cors import CORS
 from app.models import Animal, AnimalOwner, Appointment, FavoriteVeterinarian, Notification, Review, UserActivity, Veterinarian
@@ -15,6 +18,7 @@ import pytz
 from pytz import timezone
 import cloudinary
 import cloudinary.uploader
+from dotenv import load_dotenv
 
 auth_bp = Blueprint('auth_bp', __name__)
 CORS(auth_bp)
@@ -23,6 +27,18 @@ blacklisted_tokens = set()
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+load_dotenv()
+
+# Get credentials from environment variables
+consumer_key = os.getenv('77oVKNqkC0FVX7DGhuHKVloRaXiquyGlga1UpzBbA7lKFKGi')
+consumer_secret = os.getenv('BBxpqjzAyWrQHavD0vDMIz4UiyfrDCtpAwyAWXD1lenP0RodESTG91vwUNc5vrso')
+shortcode = os.getenv('174379')
+mpesa_callback_url = os.getenv('https://8ebd-102-0-11-2.ngrok-free.app/mpesa/callback')
+
+# Safaricom API endpoints
+auth_url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+payment_url = 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
 
 app.config['SECRET_KEY'] = 'your_secret_key_here'
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key_here'
@@ -842,11 +858,7 @@ def get_user_activity(user_id):
     reviews = Review.query.filter_by(owner_id=user_id).all()
     favorites = FavoriteVeterinarian.query.filter_by(owner_id=user_id).all()
     notifications = Notification.query.filter_by(user_id=user_id).all()
-
-    # Fetch animal registration activities without filtering by `user_type`
-    registrations = UserActivity.query.filter_by(user_id=user_id, activity_type='animal_registration').all()
-    appointment_activities = UserActivity.query.filter_by(user_id=user_id, activity_type='appointment').all()
-    review_activities = UserActivity.query.filter_by(user_id=user_id, activity_type='review').all()
+    registrations = Animal.query.filter_by(owner_id=user_id).all()  # Fetch actual animals registered
 
     # Convert data to JSON format
     activity_data = {
@@ -854,34 +866,97 @@ def get_user_activity(user_id):
         "email": user_email,
         "activities": [
             *[
-                {"type": "Appointment", "description": a.status, "timestamp": a.date.isoformat()}
+                {
+                    "type": "Appointment",
+                    "description": f"Appointment with Dr. {a.veterinarian.name} on {a.date.strftime('%Y-%m-%d')} - {a.status}",
+                    "timestamp": a.date.isoformat(),
+                }
                 for a in appointments
             ],
             *[
-                {"type": "Review", "description": r.review_text, "timestamp": r.created_at.isoformat()}
+                {
+                    "type": "Review",
+                    "description": f"Reviewed Dr. {r.veterinarian.name} - '{r.review_text}' (Rating: {r.rating}/5)",
+                    "timestamp": r.created_at.isoformat(),
+                }
                 for r in reviews
             ],
             *[
-                {"type": "Favorite", "description": f"Favorited veterinarian {f.veterinarian_id}", "timestamp": "N/A"}
+                {
+                    "type": "Favorite",
+                    "description": f"Favorited veterinarian Dr. {f.veterinarian.name}",
+                    "timestamp": "N/A",
+                }
                 for f in favorites
             ],
             *[
-                {"type": "Notification", "description": n.title, "timestamp": n.timestamp.isoformat()}
+                {
+                    "type": "Notification",
+                    "description": n.title,
+                    "timestamp": n.timestamp.isoformat(),
+                }
                 for n in notifications
             ],
             *[
-                {"type": "Animal Registration", "description": reg.description, "timestamp": reg.timestamp.isoformat()}
+                {
+                    "type": "Animal Registration",
+                    "description": f"Registered {reg.name} ({reg.species}, {reg.breed})",
+                    "timestamp": reg.created_at.isoformat(),
+                }
                 for reg in registrations
-            ],
-            *[
-                {"type": "Appointment Activity", "description": a.description, "timestamp": a.timestamp.isoformat()}
-                for a in appointment_activities
-            ],
-            *[
-                {"type": "Review Activity", "description": r.description, "timestamp": r.timestamp.isoformat()}
-                for r in review_activities
             ],
         ]
     }
 
+    return jsonify(activity_data)
+
+
     return jsonify(activity_data), 200
+
+def get_access_token():
+    # Safaricom authorization URL
+    api_url = auth_url
+    headers = {
+        'Authorization': 'Basic ' + base64.b64encode(f"{consumer_key}:{consumer_secret}".encode('utf-8')).decode('utf-8'),
+    }
+
+    response = requests.get(api_url, headers=headers)
+    
+    # If authentication is successful, it returns a token
+    if response.status_code == 200:
+        access_token = response.json()['access_token']
+        return access_token
+    else:
+        print(f"Error: {response.text}")
+        return None
+
+
+@auth_bp.route('/mpesa/payment', methods=['POST'])
+def mpesa_payment():
+    try:
+        data = request.json
+        amount = data.get("amount")
+        phone_number = data.get("phone_number")
+
+        if not amount or not phone_number:
+            return jsonify({"error": "Missing amount or phone number"}), 400
+
+        # Simulate sending request to MPesa API (replace with actual logic)
+        mpesa_response = {
+            "status": "success",
+            "message": "STK push sent",
+            "checkout_request_id": "ws_CO_123456789"
+        }
+
+        return jsonify(mpesa_response), 200
+
+    except Exception as e:
+        print("Error:", str(e))
+        return jsonify({"error": str(e)}), 500
+    
+    
+@auth_bp.route('/mpesa/callback', methods=['POST'])
+def callback():
+    data = request.json
+    print("Received callback:", data)
+    return jsonify({"message": "Callback received"}), 200

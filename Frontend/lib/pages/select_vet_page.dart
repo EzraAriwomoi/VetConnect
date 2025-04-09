@@ -15,9 +15,9 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
   bool isLoading = true;
   bool hasError = false;
   String searchQuery = '';
-  
+
   // Mock online status - in a real app, this would come from a backend service
-  final Map<String, bool> onlineStatus = {};
+  // final Map<String, bool> onlineStatus = {};
 
   @override
   void initState() {
@@ -33,17 +33,18 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
         isLoading = true;
         hasError = false;
       });
-      
+
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        
+
         // Generate random online status for demo purposes
-        for (var vet in data) {
-          onlineStatus[vet['email']] = DateTime.now().millisecondsSinceEpoch % 2 == 0;
-        }
-        
+        // for (var vet in data) {
+        //   onlineStatus[vet['email']] =
+        //       DateTime.now().millisecondsSinceEpoch % 2 == 0;
+        // }
+
         setState(() {
           veterinarians = data;
           filteredVeterinarians = data;
@@ -64,7 +65,7 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
       print("Error fetching veterinarians: $e");
     }
   }
-  
+
   void filterVeterinarians(String query) {
     setState(() {
       searchQuery = query;
@@ -75,10 +76,10 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
           final name = vet['name']?.toString().toLowerCase() ?? '';
           final clinic = vet['clinic']?.toString().toLowerCase() ?? '';
           final specialty = vet['specialty']?.toString().toLowerCase() ?? '';
-          
-          return name.contains(query.toLowerCase()) || 
-                 clinic.contains(query.toLowerCase()) ||
-                 specialty.contains(query.toLowerCase());
+
+          return name.contains(query.toLowerCase()) ||
+              clinic.contains(query.toLowerCase()) ||
+              specialty.contains(query.toLowerCase());
         }).toList();
       }
     });
@@ -142,7 +143,7 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
               onChanged: filterVeterinarians,
             ),
           ),
-          
+
           // Status indicator
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -172,28 +173,29 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
                           shape: BoxShape.circle,
                         ),
                       ),
-                      SizedBox(width: 4),
-                      Text(
-                        'Online',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      // SizedBox(width: 4),
+                      // Text(
+                      //   'Online',
+                      //   style: TextStyle(
+                      //     color: Colors.green,
+                      //     fontSize: 12,
+                      //     fontWeight: FontWeight.bold,
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          
+
           // Main content
           Expanded(
             child: isLoading
                 ? Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.lightBlue),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.lightBlue),
                     ),
                   )
                 : hasError
@@ -206,7 +208,7 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
       ),
     );
   }
-  
+
   Widget _buildErrorView() {
     return Center(
       child: Column(
@@ -252,7 +254,7 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
       ),
     );
   }
-  
+
   Widget _buildEmptyView() {
     return Center(
       child: Column(
@@ -287,15 +289,15 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
       ),
     );
   }
-  
+
   Widget _buildVeterinariansList() {
     return ListView.builder(
       itemCount: filteredVeterinarians.length,
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemBuilder: (context, index) {
         final vet = filteredVeterinarians[index];
-        final isOnline = onlineStatus[vet['email']] ?? false;
-        
+        // final isOnline = onlineStatus[vet['email']] ?? false;
+
         return Card(
           elevation: 2,
           margin: EdgeInsets.only(bottom: 16),
@@ -305,20 +307,19 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  if (currentUser == null || currentUser.email == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Please sign in to start chatting'))
-    );
-    return;
-  }
+              final currentUser = FirebaseAuth.instance.currentUser;
+              if (currentUser == null || currentUser.email == null) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Please sign in to start chatting')));
+                return;
+              }
 
-  Navigator.pop(context, {
-    'vetEmail': vet['email'], // Pass the vet's email separately
-    'vetName': "Dr. ${vet['name']}",
-    'vetImage': vet['profileImage'],
-  });
-},
+              Navigator.pop(context, {
+                'vetEmail': vet['email'], // Pass the vet's email separately
+                'vetName': "Dr. ${vet['name']}",
+                'vetImage': vet['profileImage'],
+              });
+            },
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -368,27 +369,27 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
                                 ),
                         ),
                       ),
-                      if (isOnline)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 18,
-                            height: 18,
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                        ),
+                      // if (isOnline)
+                      //   Positioned(
+                      //     right: 0,
+                      //     bottom: 0,
+                      //     child: Container(
+                      //       width: 18,
+                      //       height: 18,
+                      //       decoration: BoxDecoration(
+                      //         color: Colors.green,
+                      //         shape: BoxShape.circle,
+                      //         border: Border.all(
+                      //           color: Colors.white,
+                      //           width: 2,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
                     ],
                   ),
                   SizedBox(width: 16),
-                  
+
                   // Vet information
                   Expanded(
                     child: Column(
@@ -407,23 +408,24 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isOnline
-                                    ? Colors.green.withOpacity(0.1)
-                                    : Colors.grey.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                isOnline ? 'Online' : 'Offline',
-                                style: TextStyle(
-                                  color: isOnline ? Colors.green : Colors.grey,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
+                            // Container(
+                            //   padding: EdgeInsets.symmetric(
+                            //       horizontal: 8, vertical: 4),
+                            //   decoration: BoxDecoration(
+                            //     color: isOnline
+                            //         ? Colors.green.withOpacity(0.1)
+                            //         : Colors.grey.withOpacity(0.1),
+                            //     borderRadius: BorderRadius.circular(12),
+                            //   ),
+                            //   child: Text(
+                            //     isOnline ? 'Online' : 'Offline',
+                            //     style: TextStyle(
+                            //       color: isOnline ? Colors.green : Colors.grey,
+                            //       fontSize: 12,
+                            //       fontWeight: FontWeight.bold,
+                            //     ),
+                            //   ),
+                            // ),
                           ],
                         ),
                         SizedBox(height: 4),
@@ -437,7 +439,7 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 8),
-                        
+
                         // Specialty and experience
                         Row(
                           children: [
@@ -446,43 +448,48 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
                               label: vet['specialty'] ?? 'General',
                               color: Colors.blue,
                             ),
-                            SizedBox(width: 8),
-                            _buildInfoChip(
-                              icon: Icons.star,
-                              label: '${vet['experience'] ?? '5'} yrs',
-                              color: Colors.amber,
-                            ),
+                            // SizedBox(width: 8),
+                            // _buildInfoChip(
+                            //   icon: Icons.star,
+                            //   label: '${vet['experience'] ?? '5'} yrs',
+                            //   color: Colors.amber,
+                            // ),
                           ],
                         ),
-                        
+
                         SizedBox(height: 12),
-                        
+
                         // Chat button
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             ElevatedButton.icon(
                               onPressed: () {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  if (currentUser == null || currentUser.email == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Please sign in to start chatting'))
-    );
-    return;
-  }
+                                final currentUser =
+                                    FirebaseAuth.instance.currentUser;
+                                if (currentUser == null ||
+                                    currentUser.email == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              'Please sign in to start chatting')));
+                                  return;
+                                }
 
-  Navigator.pop(context, {
-    'vetEmail': vet['email'], // Pass the vet's email separately
-    'vetName': "Dr. ${vet['name']}",
-    'vetImage': vet['profileImage'],
-  });
-},
+                                Navigator.pop(context, {
+                                  'vetEmail': vet[
+                                      'email'], // Pass the vet's email separately
+                                  'vetName': "Dr. ${vet['name']}",
+                                  'vetImage': vet['profileImage'],
+                                });
+                              },
                               icon: Icon(Icons.chat_bubble_outline, size: 18),
                               label: Text('Start Chat'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.lightBlue,
                                 foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -501,7 +508,7 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
       },
     );
   }
-  
+
   Widget _buildInfoChip({
     required IconData icon,
     required String label,
@@ -535,4 +542,3 @@ class _SelectVeterinarianScreenState extends State<SelectVeterinarianScreen> {
     );
   }
 }
-

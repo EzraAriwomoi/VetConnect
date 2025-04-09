@@ -3,6 +3,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:vetconnect/pages/appointment_details_page.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:vetconnect/pages/animal_details_page.dart';
+import 'package:vetconnect/pages/doc_profile.dart';
+import 'package:vetconnect/pages/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'dart:typed_data';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:pdf/widgets.dart' as pw;
+import 'dart:html' as html;
+import 'dart:typed_data';
 
 class ProfilePageVet extends StatefulWidget {
   @override
@@ -16,6 +31,7 @@ class _ProfilePageVetState extends State<ProfilePageVet>
   int? loggedInVetId;
   String vetName = "Veterinarian";
   String clinicName = "Clinic Name";
+    int? loggedInUserId;
   String specialization = "Specialization";
   String? profileImage;
 
@@ -70,6 +86,112 @@ class _ProfilePageVetState extends State<ProfilePageVet>
     );
   }
 
+  Future<void> _logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      print("No token found, logging out locally.");
+      _clearUserData();
+      _navigateToLogin(context);
+      return;
+    }
+
+    print("Sending logout request with token: $token");
+
+    final response = await http.post(
+      Uri.parse('http://192.168.107.58:5000/logout'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print("Successfully logged out from Flask backend.");
+      _clearUserData();
+      _navigateToLogin(context);
+    } else {
+      print("Logout failed: ${response.body}");
+    }
+  }
+
+  void _clearUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('userType');
+    await prefs.remove('userId');
+  }
+
+  void _navigateToLogin(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      print("Navigating to login page");
+
+      if (!context.mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+        (route) => false,
+      );
+    });
+  }
+
+
+   Future<void> _generateUserReport(BuildContext context, int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.107.58:5000/user_activity/$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("API Response: ${response.body}"); // Debugging
+
+        final List activities =
+            data['activities'] ?? []; // Ensure it's not null
+
+        final pdf = pw.Document();
+        pdf.addPage(
+          pw.Page(
+            build: (pw.Context context) => pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text("User Activity Report",
+                    style: pw.TextStyle(
+                        fontSize: 22, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 10),
+                pw.Text("Name: ${data['name'] ?? 'N/A'}"),
+                pw.Text("Email: ${data['email'] ?? 'N/A'}"),
+                pw.SizedBox(height: 10),
+                pw.Text("Activities:",
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                if (activities.isEmpty)
+                  pw.Text("No activities recorded.")
+                else
+                  ...activities.map((activity) => pw.Text(
+                        "- ${activity['type']}: ${activity['description']} on ${activity['timestamp']}",
+                      )),
+              ],
+            ),
+          ),
+        );
+
+        final Uint8List pdfBytes = await pdf.save();
+
+        final blob = html.Blob([pdfBytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute("download", "activities.pdf")
+          ..click();
+        html.Url.revokeObjectUrl(url);
+      } else {
+        print("Failed to fetch user activity. Status: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error generating report: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,6 +203,107 @@ class _ProfilePageVetState extends State<ProfilePageVet>
           'Profile',
           style: TextStyle(color: Colors.black),
         ),
+      actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'edit_profile') {
+                // Navigate to Edit Profile screen
+              } else if (value == 'logout') {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Logout'),
+                    content: Text('Are you sure you want to log out?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _logout(context);
+                        },
+                        child: Text('Logout',
+                            style: TextStyle(
+                              color: const Color.fromARGB(255, 250, 109, 99),
+                            )),
+                      ),
+                    ],
+                  ),
+                );
+              } else if (value == 'download_report') {
+                if (loggedInUserId != null) {
+                  _generateUserReport(context, loggedInUserId!);
+                } else {
+                  print("Error: User ID is null. Cannot generate report.");
+                }
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'edit_profile',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, color: Colors.black),
+                    SizedBox(width: 10),
+                    Text('Edit Profile'),
+                  ],
+                ),
+                height: 35,
+              ),
+              PopupMenuItem<String>(
+                value: 'help',
+                child: Row(
+                  children: [
+                    Icon(Icons.help_outline, color: Colors.black),
+                    SizedBox(width: 10),
+                    Text('Help'),
+                  ],
+                ),
+                height: 35,
+              ),
+              PopupMenuItem<String>(
+                value: 'download_report',
+                child: Row(
+                  children: [
+                    Icon(Icons.file_download, color: Colors.black),
+                    SizedBox(width: 10),
+                    Text('Report'),
+                  ],
+                ),
+                height: 35,
+              ),
+              PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.logout,
+                      color: const Color.fromARGB(255, 250, 109, 99),
+                    ),
+                    SizedBox(width: 10),
+                    Text('Logout',
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 250, 109, 99),
+                        )),
+                  ],
+                ),
+                height: 35,
+              ),
+            ],
+            icon: const Icon(
+              Icons.settings,
+              color: Colors.black,
+            ),
+            tooltip: 'Settings',
+            offset: Offset(0, 40),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            color: Colors.white,
+          ),
+        ],
       ),
       body: RefreshIndicator(
         color: Colors.lightBlue,
